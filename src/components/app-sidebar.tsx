@@ -9,6 +9,7 @@ import {
     Users,
     CheckSquare,
     UserCircle,
+    Package,
 } from "lucide-react"
 
 import {
@@ -34,6 +35,7 @@ const allMenuItems = [
     { title: "Çekimler", url: "/shoots", icon: Camera, adminOnly: true },
     { title: "Müşteriler", url: "/customers", icon: Users, adminOnly: true },
     { title: "Personel", url: "/employees", icon: UserCircle, adminOnly: true },
+    { title: "Stok Yönetimi", url: "/inventory", icon: Package, adminOnly: true },
     { title: "Finans", url: "/finance", icon: CreditCard, adminOnly: true },
 ]
 
