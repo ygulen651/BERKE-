@@ -31,6 +31,8 @@ export async function updateInventoryQuantity(id: string, amount: number) {
             }
         )
         revalidatePath("/inventory")
+        revalidatePath("/shoots")
+        revalidatePath("/calendar")
         return { success: true }
     } catch (error: any) {
         console.error("Update inventory error:", error)
@@ -48,6 +50,8 @@ export async function createInventoryItem(data: { name: string, type: 'FRAME' | 
         }
         await db.collection("Inventory").insertOne(newItem)
         revalidatePath("/inventory")
+        revalidatePath("/shoots")
+        revalidatePath("/calendar")
         return { success: true }
     } catch (error: any) {
         console.error("Create inventory error:", error)
@@ -60,6 +64,8 @@ export async function deleteInventoryItem(id: string) {
         const db = await getDb()
         await db.collection("Inventory").deleteOne({ _id: new ObjectId(id) })
         revalidatePath("/inventory")
+        revalidatePath("/shoots")
+        revalidatePath("/calendar")
         return { success: true }
     } catch (error: any) {
         console.error("Delete inventory error:", error)
