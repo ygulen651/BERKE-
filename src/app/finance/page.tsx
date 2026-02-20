@@ -12,6 +12,7 @@ import {
 import { getTransactions, getFinanceStats } from "@/actions/finance-actions"
 import { getEmployees } from "@/actions/employee-actions"
 import { getShoots } from "@/actions/shoot-actions"
+import { getInventory } from "@/actions/inventory-actions"
 import { AddPaymentDialog } from "@/components/add-payment-dialog"
 import { AddIncomeDialog } from "@/components/add-income-dialog"
 import { TransactionActionsMenu } from "@/components/transaction-actions-menu"
@@ -21,6 +22,7 @@ export default async function FinancePage() {
     const transactions = await getTransactions()
     const employees = await getEmployees()
     const shoots = await getShoots()
+    const inventory = await getInventory()
     const {
         totalIncome,
         totalExpense,
@@ -37,7 +39,7 @@ export default async function FinancePage() {
                     <p className="text-muted-foreground">Stüdyo gelirlerini, giderlerini ve ödemeleri takip edin.</p>
                 </div>
                 <div className="flex gap-2">
-                    <AddIncomeDialog shoots={shoots} />
+                    <AddIncomeDialog shoots={shoots} inventory={inventory} />
                     <AddPaymentDialog employees={employees} />
                 </div>
             </div>
