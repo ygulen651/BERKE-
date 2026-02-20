@@ -13,6 +13,9 @@ const options = {
     },
     // Attempt to fix ECONNREFUSED on some networks by preferring IPv4
     family: 4,
+    connectTimeoutMS: 45000,
+    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 45000,
 };
 
 let client: MongoClient;
