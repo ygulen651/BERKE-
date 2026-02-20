@@ -8,7 +8,12 @@ export async function getInventory() {
     try {
         const db = await getDb()
         const items = await db.collection("Inventory").find({}).sort({ type: 1, name: 1 }).toArray()
-        return jsonify(items)
+        const serialized = items.map(item => ({
+            ...item,
+            id: item._id.toString(),
+            _id: item._id.toString()
+        }))
+        return jsonify(serialized)
     } catch (error) {
         console.error("Get inventory error:", error)
         return []
