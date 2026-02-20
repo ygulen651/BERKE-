@@ -13,7 +13,7 @@ export async function createShoot(formData: any) {
             createdAt: new Date(),
             updatedAt: new Date(),
             customerId: new ObjectId(formData.customerId),
-            staffId: formData.staffId ? new ObjectId(formData.staffId) : null
+            staffIds: (formData.staffIds || []).map((id: string) => new ObjectId(id))
         }
 
         const result = await db.collection("Shoot").insertOne(shootData)
@@ -58,20 +58,14 @@ export async function getShoots(searchQuery?: string) {
             {
                 $lookup: {
                     from: "User",
-                    localField: "staffId",
+                    localField: "staffIds",
                     foreignField: "_id",
-                    as: "staffInfo"
+                    as: "staffsInfo"
                 }
             },
             {
                 $unwind: {
                     path: "$customerInfo",
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $unwind: {
-                    path: "$staffInfo",
                     preserveNullAndEmptyArrays: true
                 }
             }
@@ -106,11 +100,11 @@ export async function getShoots(searchQuery?: string) {
                 id: s.customerInfo._id.toString(),
                 _id: s.customerInfo._id.toString(),
             } : null,
-            staff: s.staffInfo ? {
-                ...s.staffInfo,
-                id: s.staffInfo._id.toString(),
-                _id: s.staffInfo._id.toString(),
-            } : null
+            staffs: (s.staffsInfo || []).map((st: any) => ({
+                ...st,
+                id: st._id.toString(),
+                _id: st._id.toString(),
+            }))
         }))
         return jsonify(serialized)
     } catch (error) {
@@ -137,20 +131,14 @@ export async function getShoot(id: string) {
             {
                 $lookup: {
                     from: "User",
-                    localField: "staffId",
+                    localField: "staffIds",
                     foreignField: "_id",
-                    as: "staffInfo"
+                    as: "staffsInfo"
                 }
             },
             {
                 $unwind: {
                     path: "$customerInfo",
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $unwind: {
-                    path: "$staffInfo",
                     preserveNullAndEmptyArrays: true
                 }
             }
@@ -167,7 +155,12 @@ export async function getShoot(id: string) {
                 ...s.customerInfo,
                 id: s.customerInfo._id.toString(),
                 _id: s.customerInfo._id.toString(),
-            } : null
+            } : null,
+            staffs: (s.staffsInfo || []).map((st: any) => ({
+                ...st,
+                id: st._id.toString(),
+                _id: st._id.toString(),
+            }))
         }
         return jsonify(serialized)
     } catch (error) {
@@ -204,7 +197,7 @@ export async function updateShoot(id: string, formData: any) {
                     ...updateData,
                     updatedAt: new Date(),
                     customerId: new ObjectId(updateData.customerId),
-                    staffId: updateData.staffId ? new ObjectId(updateData.staffId) : null
+                    staffIds: (updateData.staffIds || []).map((id: string) => new ObjectId(id))
                 }
             }
         )

@@ -115,8 +115,12 @@ export default async function ShootDetailsPage({ params }: { params: Promise<{ i
                                         <User className="w-5 h-5 text-blue-600" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-medium text-muted-foreground uppercase">Görevli Personel</p>
-                                        <p className="font-semibold text-slate-900">{(shoot as any).staff?.name || "Atanmamış"}</p>
+                                        <p className="text-xs font-medium text-muted-foreground uppercase">Görevli Personeller</p>
+                                        <p className="font-semibold text-slate-900">
+                                            {shoot.staffs && shoot.staffs.length > 0
+                                                ? shoot.staffs.map((st: any) => st.name).join(", ")
+                                                : "Atanmamış"}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

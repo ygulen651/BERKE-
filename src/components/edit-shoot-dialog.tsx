@@ -54,7 +54,7 @@ const formSchema = z.object({
     totalPrice: z.coerce.number().min(0),
     deposit: z.coerce.number().min(0),
     status: z.string().min(1),
-    staffId: z.string().optional().or(z.literal("")),
+    staffIds: z.array(z.string()).max(5, "En fazla 5 personel seçebilirsiniz"),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -79,6 +79,15 @@ export function EditShootDialog({ shoot, customers, employees, inventory, open, 
         )
     }
 
+    const toggleStaff = (id: string) => {
+        const currentIds = form.getValues("staffIds") || []
+        if (currentIds.includes(id)) {
+            form.setValue("staffIds", currentIds.filter(i => i !== id))
+        } else if (currentIds.length < 5) {
+            form.setValue("staffIds", [...currentIds, id])
+        }
+    }
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema) as any,
         defaultValues: {
@@ -93,7 +102,7 @@ export function EditShootDialog({ shoot, customers, employees, inventory, open, 
             totalPrice: shoot.totalPrice || 0,
             deposit: shoot.deposit || 0,
             status: shoot.status || "PLANNED",
-            staffId: shoot.staffId?.toString() || "",
+            staffIds: shoot.staffIds?.map((id: any) => id.toString()) || [],
         },
     })
 
@@ -112,7 +121,7 @@ export function EditShootDialog({ shoot, customers, employees, inventory, open, 
                 totalPrice: shoot.totalPrice || 0,
                 deposit: shoot.deposit || 0,
                 status: shoot.status || "PLANNED",
-                staffId: shoot.staffId?.toString() || "",
+                staffIds: shoot.staffIds?.map((id: any) => id.toString()) || [],
             })
             setSelectedExtras(shoot.extras || [])
         }
@@ -135,7 +144,7 @@ export function EditShootDialog({ shoot, customers, employees, inventory, open, 
             totalPrice: values.totalPrice,
             deposit: values.deposit,
             status: values.status,
-            staffId: values.staffId,
+            staffIds: values.staffIds,
             extras: selectedExtras,
         })
 
@@ -162,20 +171,28 @@ export function EditShootDialog({ shoot, customers, employees, inventory, open, 
                     <div className="grid grid-cols-2 gap-4">
                         {/* Personel Seçimi (Opsiyonel) */}
                         <div className="space-y-2 col-span-2">
-                            <label className="text-sm font-medium">Görevli Personel</label>
-                            <Select
-                                onValueChange={(val) => form.setValue("staffId", val)}
-                                defaultValue={form.getValues("staffId")}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Personel seçin" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {employees.map((e) => (
-                                        <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <label className="text-sm font-medium">Görevli Personeller (Maks 5 Kişi)</label>
+                            <div className="flex flex-wrap gap-2">
+                                {employees.map((e) => {
+                                    const isSelected = (form.watch("staffIds") || []).includes(e.id)
+                                    return (
+                                        <button
+                                            key={e.id}
+                                            type="button"
+                                            onClick={() => toggleStaff(e.id)}
+                                            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${isSelected
+                                                    ? "bg-blue-600 border-blue-600 text-white"
+                                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                                                }`}
+                                        >
+                                            {e.name}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            {form.formState.errors.staffIds && (
+                                <p className="text-xs text-red-500">{form.formState.errors.staffIds.message}</p>
+                            )}
                         </div>
                         <div className="space-y-2 col-span-2">
                             <label className="text-sm font-medium">Müşteri Seçin</label>

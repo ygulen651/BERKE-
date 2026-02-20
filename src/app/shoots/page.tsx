@@ -93,6 +93,11 @@ export default async function ShootsPage({
                                             {new Date(shoot.startDateTime).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })} -
                                             {new Date(shoot.endDateTime).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })}
                                         </div>
+                                        {shoot.staffs && shoot.staffs.length > 0 && (
+                                            <div className="text-[10px] text-blue-600 pl-5 mt-1 font-medium italic">
+                                                {shoot.staffs.map((st: any) => st.name).join(", ")}
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className="font-normal">
