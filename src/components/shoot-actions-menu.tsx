@@ -17,9 +17,10 @@ interface ShootActionsMenuProps {
     shoot: any
     customers: any[]
     employees: any[]
+    inventory: any[]
 }
 
-export function ShootActionsMenu({ shoot, customers, employees }: ShootActionsMenuProps) {
+export function ShootActionsMenu({ shoot, customers, employees, inventory }: ShootActionsMenuProps) {
     const [isDeleting, setIsDeleting] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const router = useRouter()
@@ -68,6 +69,7 @@ export function ShootActionsMenu({ shoot, customers, employees }: ShootActionsMe
                 shoot={shoot}
                 customers={customers}
                 employees={employees}
+                inventory={inventory}
                 open={editOpen}
                 onOpenChange={setEditOpen}
             />

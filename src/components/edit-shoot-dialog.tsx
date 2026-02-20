@@ -21,9 +21,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+import { Loader2, Check } from "lucide-react"
 import { updateShoot } from "@/actions/shoot-actions"
 import { useRouter } from "next/navigation"
+
+const EXTRAS = [
+    { id: "album_25x70", label: "25x70 Albüm Kutu" },
+    { id: "cerceve", label: "Çerçeve" },
+    { id: "kanvas", label: "Kanvas" },
+    { id: "ask_kitabi", label: "Aşk Kitabı" },
+    { id: "klip", label: "Klip" },
+    { id: "fotograf", label: "Fotoğraf" },
+    { id: "gelin_alma", label: "Gelin Alma" },
+    { id: "dis_cekim_dis", label: "Dış Çekim (Dışarı)" },
+    { id: "dis_cekim_studyo", label: "Dış Çekim (Stüdyo)" },
+    { id: "acilis_klibi", label: "Açılış Klibi" },
+    { id: "klibi", label: "Düğün Hikayesi" },
+    { id: "drone", label: "Drone Çekim" },
+    { id: "aktuel", label: "Aktüel" },
+    { id: "kamera", label: "Kamera" },
+]
 
 const formSchema = z.object({
     customerId: z.string().min(1, "Müşteri seçimi gereklidir"),
@@ -46,13 +63,21 @@ interface EditShootDialogProps {
     shoot: any
     customers: any[]
     employees: any[]
+    inventory: any[]
     open: boolean
     onOpenChange: (open: boolean) => void
 }
 
-export function EditShootDialog({ shoot, customers, employees, open, onOpenChange }: EditShootDialogProps) {
+export function EditShootDialog({ shoot, customers, employees, inventory, open, onOpenChange }: EditShootDialogProps) {
     const [loading, setLoading] = useState(false)
+    const [selectedExtras, setSelectedExtras] = useState<string[]>([])
     const router = useRouter()
+
+    const toggleExtra = (id: string) => {
+        setSelectedExtras(prev =>
+            prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+        )
+    }
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema) as any,
@@ -89,6 +114,7 @@ export function EditShootDialog({ shoot, customers, employees, open, onOpenChang
                 status: shoot.status || "PLANNED",
                 staffId: shoot.staffId?.toString() || "",
             })
+            setSelectedExtras(shoot.extras || [])
         }
     }, [shoot, form])
 
@@ -110,6 +136,7 @@ export function EditShootDialog({ shoot, customers, employees, open, onOpenChang
             deposit: values.deposit,
             status: values.status,
             staffId: values.staffId,
+            extras: selectedExtras,
         })
 
         setLoading(false)
@@ -124,7 +151,7 @@ export function EditShootDialog({ shoot, customers, employees, open, onOpenChang
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Çekim Kaydını Düzenle</DialogTitle>
                     <DialogDescription>
@@ -230,6 +257,58 @@ export function EditShootDialog({ shoot, customers, employees, open, onOpenChang
                             <Input {...form.register("location")} placeholder="Örn: Karaman Kalesi" />
                         </div>
                     </div>
+
+                    {/* Paket Seçenekleri */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Paket İçeriği & Ürünler</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {/* Statik Ekstralar */}
+                            {EXTRAS.map((extra) => {
+                                const isSelected = selectedExtras.includes(extra.id)
+                                return (
+                                    <button
+                                        key={extra.id}
+                                        type="button"
+                                        onClick={() => toggleExtra(extra.id)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all text-left ${isSelected
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                                            }`}
+                                    >
+                                        <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border ${isSelected ? "bg-white/20 border-white/40" : "border-slate-300"
+                                            }`}>
+                                            {isSelected && <Check className="w-3 h-3" />}
+                                        </span>
+                                        {extra.label}
+                                    </button>
+                                )
+                            })}
+
+                            {/* Dinamik Stoklar (Envanter) */}
+                            {inventory.map((item) => {
+                                const isSelected = selectedExtras.includes(item.id)
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => toggleExtra(item.id)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all text-left ${isSelected
+                                            ? "bg-emerald-600 text-white border-emerald-700"
+                                            : "bg-emerald-50/50 border-emerald-100 text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50"
+                                            }`}
+                                    >
+                                        <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border ${isSelected ? "bg-white/20 border-white/40" : "border-emerald-300"
+                                            }`}>
+                                            {isSelected && <Check className="w-3 h-3" />}
+                                        </span>
+                                        <span className="truncate">{item.name}</span>
+                                        <span className="text-[10px] opacity-70 ml-auto flex-shrink-0">Stok: {item.quantity}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
+
                     <DialogFooter className="pt-4">
                         <Button type="submit" disabled={loading} className="w-full">
                             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

@@ -63,9 +63,10 @@ type FormValues = z.infer<typeof formSchema>
 interface AddShootDialogProps {
     customers: any[]
     employees: any[]
+    inventory: any[]
 }
 
-export function AddShootDialog({ customers, employees }: AddShootDialogProps) {
+export function AddShootDialog({ customers, employees, inventory }: AddShootDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [selectedExtras, setSelectedExtras] = useState<string[]>([])
@@ -243,8 +244,9 @@ export function AddShootDialog({ customers, employees }: AddShootDialogProps) {
 
                     {/* Paket Seçenekleri */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Paket İçeriği (İsteğe Bağlı)</label>
+                        <label className="text-sm font-medium">Paket İçeriği & Ürünler</label>
                         <div className="grid grid-cols-2 gap-2">
+                            {/* Statik Ekstralar */}
                             {EXTRAS.map((extra) => {
                                 const isSelected = selectedExtras.includes(extra.id)
                                 return (
@@ -262,6 +264,29 @@ export function AddShootDialog({ customers, employees }: AddShootDialogProps) {
                                             {isSelected && <Check className="w-3 h-3" />}
                                         </span>
                                         {extra.label}
+                                    </button>
+                                )
+                            })}
+
+                            {/* Dinamik Stoklar (Envanter) */}
+                            {inventory.map((item) => {
+                                const isSelected = selectedExtras.includes(item.id)
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => toggleExtra(item.id)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all text-left ${isSelected
+                                            ? "bg-emerald-600 text-white border-emerald-700"
+                                            : "bg-emerald-50/50 border-emerald-100 text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50"
+                                            }`}
+                                    >
+                                        <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border ${isSelected ? "bg-white/20 border-white/40" : "border-emerald-300"
+                                            }`}>
+                                            {isSelected && <Check className="w-3 h-3" />}
+                                        </span>
+                                        <span className="truncate">{item.name}</span>
+                                        <span className="text-[10px] opacity-70 ml-auto flex-shrink-0">Stok: {item.quantity}</span>
                                     </button>
                                 )
                             })}

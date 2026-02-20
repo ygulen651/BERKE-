@@ -19,6 +19,7 @@ import {
 import { getShoots } from "@/actions/shoot-actions"
 import { getCustomers } from "@/actions/customer-actions"
 import { getEmployees } from "@/actions/employee-actions"
+import { getInventory } from "@/actions/inventory-actions"
 import { AddShootDialog } from "@/components/add-shoot-dialog"
 import { ShootActionsMenu } from "@/components/shoot-actions-menu"
 import Link from "next/link"
@@ -33,6 +34,7 @@ export default async function ShootsPage({
     const shoots = await getShoots(query)
     const customers = await getCustomers()
     const employees = await getEmployees()
+    const inventory = await getInventory()
 
     return (
         <div className="space-y-6">
@@ -41,7 +43,7 @@ export default async function ShootsPage({
                     <h2 className="text-3xl font-bold tracking-tight">Çekimler</h2>
                     <p className="text-muted-foreground">Stüdyo çekimlerini, randevuları ve iş süreçlerini takip edin.</p>
                 </div>
-                <AddShootDialog customers={customers} employees={employees} />
+                <AddShootDialog customers={customers} employees={employees} inventory={inventory} />
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -107,7 +109,7 @@ export default async function ShootsPage({
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
                                                 <MessageCircle className="w-4 h-4" />
                                             </Button>
-                                            <ShootActionsMenu shoot={shoot} customers={customers} employees={employees} />
+                                            <ShootActionsMenu shoot={shoot} customers={customers} employees={employees} inventory={inventory} />
                                         </div>
                                     </TableCell>
                                 </TableRow>

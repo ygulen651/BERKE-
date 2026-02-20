@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +17,7 @@ import { updateInventoryQuantity, deleteInventoryItem } from "@/actions/inventor
 
 export function InventoryList({ items }: { items: any[] }) {
     const [loading, setLoading] = useState<string | null>(null)
+    const router = useRouter()
 
     const handleUpdateQuantity = async (id: string, amount: number) => {
         setLoading(id)
@@ -33,7 +35,7 @@ export function InventoryList({ items }: { items: any[] }) {
         setLoading(id)
         const result = await deleteInventoryItem(id)
         if (result.success) {
-            // Başarılı
+            router.refresh()
         } else {
             alert("Silme işlemi sırasında hata oluştu")
         }
