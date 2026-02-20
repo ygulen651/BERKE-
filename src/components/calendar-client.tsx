@@ -9,7 +9,7 @@ import multiMonthPlugin from "@fullcalendar/multimonth"
 import trLocale from "@fullcalendar/core/locales/tr"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Camera, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Info } from "lucide-react"
+import { Camera, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Info, User } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -257,10 +257,20 @@ export function CalendarClient({ initialEvents }: CalendarClientProps) {
                                 </div>
                                 <div className="space-y-0.5">
                                     <p className="text-sm font-medium text-slate-500">Konum</p>
-                                    <p className="text-sm font-semibold">{selectedEvent.location}</p>
+                                    <p className="text-sm font-medium">{selectedEvent?.location || "Belirtilmemiş"}</p>
                                 </div>
                             </div>
                         )}
+
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                                <User className="w-4 h-4" />
+                            </div>
+                            <div className="space-y-0.5">
+                                <p className="text-sm font-medium text-slate-500">Görevli Personel</p>
+                                <p className="text-sm font-semibold">{(selectedEvent as any)?.extendedProps?.staffName || "Atanmamış"}</p>
+                            </div>
+                        </div>
 
                         {selectedEvent?.notes && (
                             <div className="flex items-start gap-3 mt-2 bg-slate-50 p-3 rounded-lg border">

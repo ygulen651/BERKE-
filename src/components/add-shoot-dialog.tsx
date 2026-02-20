@@ -55,15 +55,17 @@ const formSchema = z.object({
     package: z.string().optional().or(z.literal("")),
     totalPrice: z.coerce.number().min(0),
     deposit: z.coerce.number().min(0),
+    staffId: z.string().optional().or(z.literal("")),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
 interface AddShootDialogProps {
     customers: any[]
+    employees: any[]
 }
 
-export function AddShootDialog({ customers }: AddShootDialogProps) {
+export function AddShootDialog({ customers, employees }: AddShootDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [selectedExtras, setSelectedExtras] = useState<string[]>([])
@@ -89,6 +91,7 @@ export function AddShootDialog({ customers }: AddShootDialogProps) {
             package: "",
             totalPrice: 0,
             deposit: 0,
+            staffId: "",
         },
     })
 
@@ -110,6 +113,7 @@ export function AddShootDialog({ customers }: AddShootDialogProps) {
             totalPrice: values.totalPrice,
             deposit: values.deposit,
             extras: selectedExtras,
+            staffId: values.staffId,
         })
 
         setLoading(false)
@@ -141,6 +145,24 @@ export function AddShootDialog({ customers }: AddShootDialogProps) {
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                     <div className="grid grid-cols-2 gap-4">
+                        {/* Personel Seçimi (Opsiyonel) */}
+                        <div className="space-y-2 col-span-2">
+                            <label className="text-sm font-medium">Görevli Personel (Opsiyonel)</label>
+                            <Select onValueChange={(val) => form.setValue("staffId", val)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Personel seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {employees.length === 0 ? (
+                                        <SelectItem value="none" disabled>Personel kaydı yok</SelectItem>
+                                    ) : (
+                                        employees.map((e) => (
+                                            <SelectItem key={e.id} value={e.id}>{e.name} ({e.role})</SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         {/* Müşteri */}
                         <div className="space-y-2 col-span-2">
                             <label className="text-sm font-medium">Müşteri Seçin</label>

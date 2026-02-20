@@ -37,6 +37,7 @@ const formSchema = z.object({
     totalPrice: z.coerce.number().min(0),
     deposit: z.coerce.number().min(0),
     status: z.string().min(1),
+    staffId: z.string().optional().or(z.literal("")),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -44,11 +45,12 @@ type FormValues = z.infer<typeof formSchema>
 interface EditShootDialogProps {
     shoot: any
     customers: any[]
+    employees: any[]
     open: boolean
     onOpenChange: (open: boolean) => void
 }
 
-export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditShootDialogProps) {
+export function EditShootDialog({ shoot, customers, employees, open, onOpenChange }: EditShootDialogProps) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
@@ -66,6 +68,7 @@ export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditSh
             totalPrice: shoot.totalPrice || 0,
             deposit: shoot.deposit || 0,
             status: shoot.status || "PLANNED",
+            staffId: shoot.staffId?.toString() || "",
         },
     })
 
@@ -84,6 +87,7 @@ export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditSh
                 totalPrice: shoot.totalPrice || 0,
                 deposit: shoot.deposit || 0,
                 status: shoot.status || "PLANNED",
+                staffId: shoot.staffId?.toString() || "",
             })
         }
     }, [shoot, form])
@@ -105,6 +109,7 @@ export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditSh
             totalPrice: values.totalPrice,
             deposit: values.deposit,
             status: values.status,
+            staffId: values.staffId,
         })
 
         setLoading(false)
@@ -128,6 +133,23 @@ export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditSh
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                     <div className="grid grid-cols-2 gap-4">
+                        {/* Personel Seçimi (Opsiyonel) */}
+                        <div className="space-y-2 col-span-2">
+                            <label className="text-sm font-medium">Görevli Personel</label>
+                            <Select
+                                onValueChange={(val) => form.setValue("staffId", val)}
+                                defaultValue={form.getValues("staffId")}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Personel seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {employees.map((e) => (
+                                        <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="space-y-2 col-span-2">
                             <label className="text-sm font-medium">Müşteri Seçin</label>
                             <Select

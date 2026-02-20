@@ -110,6 +110,15 @@ export default async function ShootDetailsPage({ params }: { params: Promise<{ i
                                         </p>
                                     </div>
                                 </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                                        <User className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-medium text-muted-foreground uppercase">Görevli Personel</p>
+                                        <p className="font-semibold text-slate-900">{(shoot as any).staff?.name || "Atanmamış"}</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="space-y-4">

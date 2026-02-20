@@ -12,7 +12,8 @@ export async function createShoot(formData: any) {
             status: "PLANNED",
             createdAt: new Date(),
             updatedAt: new Date(),
-            customerId: new ObjectId(formData.customerId)
+            customerId: new ObjectId(formData.customerId),
+            staffId: formData.staffId ? new ObjectId(formData.staffId) : null
         }
 
         const result = await db.collection("Shoot").insertOne(shootData)
@@ -55,8 +56,22 @@ export async function getShoots(searchQuery?: string) {
                 }
             },
             {
+                $lookup: {
+                    from: "User",
+                    localField: "staffId",
+                    foreignField: "_id",
+                    as: "staffInfo"
+                }
+            },
+            {
                 $unwind: {
                     path: "$customerInfo",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $unwind: {
+                    path: "$staffInfo",
                     preserveNullAndEmptyArrays: true
                 }
             }
@@ -90,6 +105,11 @@ export async function getShoots(searchQuery?: string) {
                 ...s.customerInfo,
                 id: s.customerInfo._id.toString(),
                 _id: s.customerInfo._id.toString(),
+            } : null,
+            staff: s.staffInfo ? {
+                ...s.staffInfo,
+                id: s.staffInfo._id.toString(),
+                _id: s.staffInfo._id.toString(),
             } : null
         }))
         return jsonify(serialized)
@@ -115,8 +135,22 @@ export async function getShoot(id: string) {
                 }
             },
             {
+                $lookup: {
+                    from: "User",
+                    localField: "staffId",
+                    foreignField: "_id",
+                    as: "staffInfo"
+                }
+            },
+            {
                 $unwind: {
                     path: "$customerInfo",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $unwind: {
+                    path: "$staffInfo",
                     preserveNullAndEmptyArrays: true
                 }
             }
@@ -169,7 +203,8 @@ export async function updateShoot(id: string, formData: any) {
                 $set: {
                     ...updateData,
                     updatedAt: new Date(),
-                    customerId: new ObjectId(updateData.customerId)
+                    customerId: new ObjectId(updateData.customerId),
+                    staffId: updateData.staffId ? new ObjectId(updateData.staffId) : null
                 }
             }
         )
