@@ -160,6 +160,7 @@ export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditSh
                                 <SelectContent>
                                     <SelectItem value="Düğün">Düğün</SelectItem>
                                     <SelectItem value="Nişan">Nişan</SelectItem>
+                                    <SelectItem value="Kına">Kına</SelectItem>
                                     <SelectItem value="Dış Çekim">Dış Çekim</SelectItem>
                                     <SelectItem value="Ürün">Ürün</SelectItem>
                                     <SelectItem value="Konsept">Konsept</SelectItem>
