@@ -103,18 +103,33 @@ export function AddInventoryDialog() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Boyut</label>
                         <div className="flex flex-wrap gap-2 mb-2">
-                            {["10x15", "15x21", "20x30", "30x40", "Plastik 15x21"].map((s) => (
-                                <Button
-                                    key={s}
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className={`h-7 px-2 text-xs ${form.watch("size") === s ? "bg-primary text-primary-foreground border-primary" : ""}`}
-                                    onClick={() => form.setValue("size", s)}
-                                >
-                                    {s}
-                                </Button>
-                            ))}
+                            {form.watch("type") === "FRAME" ? (
+                                ["10x15", "15x21", "20x30", "30x40", "Plastik 15x21", "50x70"].map((s) => (
+                                    <Button
+                                        key={s}
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className={`h-7 px-2 text-xs ${form.watch("size") === s ? "bg-primary text-primary-foreground border-primary" : ""}`}
+                                        onClick={() => form.setValue("size", s)}
+                                    >
+                                        {s}
+                                    </Button>
+                                ))
+                            ) : (
+                                ["10x15", "13x18", "15x21", "20x30", "30x40", "A4", "A3"].map((s) => (
+                                    <Button
+                                        key={s}
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className={`h-11 px-3 text-sm ${form.watch("size") === s ? "bg-emerald-600 text-white border-emerald-700" : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}
+                                        onClick={() => form.setValue("size", s)}
+                                    >
+                                        {s}
+                                    </Button>
+                                ))
+                            )}
                         </div>
                         <Input placeholder="Veya manuel girin: 25x35" {...form.register("size")} />
                         {form.formState.errors.size && (

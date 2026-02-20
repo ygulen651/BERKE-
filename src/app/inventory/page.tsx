@@ -6,8 +6,10 @@ import { AddInventoryDialog } from "@/components/add-inventory-dialog"
 import { Package } from "lucide-react"
 
 export default async function InventoryPage() {
-    // İlk girişte varsayılanları oluştur (eğer yoksa)
-    await seedDefaultInventory()
+    // İlk girişte varsayılanları oluştur (sadece koleksiyon tamamen boşsa ve sayfa yüklendiğinde veri yoksa)
+    // Not: Kullanıcı silince geri gelmemesi için bu mantığı getInventory içine de taşıyabiliriz 
+    // veya burada sadece veri boşsa ve kullanıcı hiç veri girmemişse çalışacak bir kontrol ekleyebiliriz.
+    // Şimdilik manuel silme sonrası geri gelmemesi için bu satırı yorum satırı yapıyorum veya siliyorum.
 
     const inventory = await getInventory()
 
