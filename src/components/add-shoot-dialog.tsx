@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { Camera, Loader2, PlusCircle, Check } from "lucide-react"
 import { createShoot } from "@/actions/shoot-actions"
+import { useRouter } from "next/navigation"
 
 const EXTRAS = [
     { id: "album_25x70", label: "25x70 Albüm Kutu" },
@@ -63,6 +64,7 @@ export function AddShootDialog({ customers }: AddShootDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+    const router = useRouter()
 
     const toggleExtra = (id: string) => {
         setSelectedExtras(prev =>
@@ -110,6 +112,7 @@ export function AddShootDialog({ customers }: AddShootDialogProps) {
         setLoading(false)
 
         if (result.success) {
+            router.refresh()
             setOpen(false)
             form.reset()
             setSelectedExtras([])

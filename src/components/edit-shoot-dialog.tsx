@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { updateShoot } from "@/actions/shoot-actions"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     customerId: z.string().min(1, "Müşteri seçimi gereklidir"),
@@ -49,6 +50,7 @@ interface EditShootDialogProps {
 
 export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditShootDialogProps) {
     const [loading, setLoading] = useState(false)
+    const router = useRouter()
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema) as any,
@@ -108,6 +110,7 @@ export function EditShootDialog({ shoot, customers, open, onOpenChange }: EditSh
         setLoading(false)
 
         if (result.success) {
+            router.refresh()
             onOpenChange(false)
         } else {
             alert("Hata: " + result.error)

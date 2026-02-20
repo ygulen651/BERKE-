@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { MoreVertical, Pencil, Trash2, Loader2 } from "lucide-react"
 import { deleteShoot } from "@/actions/shoot-actions"
 import { EditShootDialog } from "./edit-shoot-dialog"
+import { useRouter } from "next/navigation"
 
 interface ShootActionsMenuProps {
     shoot: any
@@ -20,6 +21,7 @@ interface ShootActionsMenuProps {
 export function ShootActionsMenu({ shoot, customers }: ShootActionsMenuProps) {
     const [isDeleting, setIsDeleting] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
+    const router = useRouter()
 
     const handleDelete = async () => {
         if (!confirm("Bu çekim kaydını silmek istediğinize emin misiniz?")) return
@@ -28,7 +30,9 @@ export function ShootActionsMenu({ shoot, customers }: ShootActionsMenuProps) {
         const result = await deleteShoot(shoot.id)
         setIsDeleting(false)
 
-        if (!result.success) {
+        if (result.success) {
+            router.refresh() // Takvim dahil tüm sayfaları güncelle
+        } else {
             alert("Hata: " + result.error)
         }
     }
