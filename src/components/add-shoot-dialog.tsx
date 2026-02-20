@@ -38,6 +38,9 @@ const EXTRAS = [
     { id: "dis_cekim_studyo", label: "Dış Çekim (Stüdyo)" },
     { id: "acilis_klibi", label: "Açılış Klibi" },
     { id: "klibi", label: "Düğün Hikayesi" },
+    { id: "drone", label: "Drone Çekim" },
+    { id: "aktuel", label: "Aktüel" },
+    { id: "kamera", label: "Kamera" },
 ]
 
 const formSchema = z.object({

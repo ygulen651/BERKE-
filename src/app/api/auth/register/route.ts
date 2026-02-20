@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { hash } from "bcryptjs"
 import { getDb } from "@/lib/mongodb"
+import { revalidatePath } from "next/cache"
 
 export async function POST(req: Request) {
     try {
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
         }
 
         await db.collection("User").insertOne(newUser)
+        revalidatePath("/employees")
 
         // Remove password from response
         const { passwordHash, ...userWithoutPassword } = newUser
