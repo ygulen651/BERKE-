@@ -27,16 +27,19 @@ import { createTransaction } from "@/actions/finance-actions"
 
 const formSchema = z.object({
     amount: z.string().min(1, "Tutar gereklidir"),
-    relatedId: z.string().min(1, "Personel seçimi gereklidir"),
+    relatedIds: z.array(z.string()).min(1, "En az bir personel seçilmelidir"),
+    shootId: z.string().optional().or(z.literal("")),
     date: z.string().min(1, "Tarih gereklidir"),
     description: z.string().optional().or(z.literal("")),
 })
 
 interface AddPaymentDialogProps {
     employees: any[]
+    shoots: any[]
+    transactions: any[]
 }
 
-export function AddPaymentDialog({ employees }: AddPaymentDialogProps) {
+export function AddPaymentDialog({ employees, shoots, transactions }: AddPaymentDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [isMounted, setIsMounted] = useState(false)
@@ -49,7 +52,8 @@ export function AddPaymentDialog({ employees }: AddPaymentDialogProps) {
         resolver: zodResolver(formSchema),
         defaultValues: {
             amount: "",
-            relatedId: "",
+            relatedIds: [],
+            shootId: "",
             date: new Date().toISOString().split('T')[0],
             description: "",
         },
@@ -99,18 +103,86 @@ export function AddPaymentDialog({ employees }: AddPaymentDialogProps) {
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Personel</label>
-                        <Select onValueChange={(val) => form.setValue("relatedId", val)}>
+                        <label className="text-sm font-medium">İlgili Çekim (Opsiyonel)</label>
+                        <Select onValueChange={(val) => form.setValue("shootId", val)}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Personel seçin" />
+                                <SelectValue placeholder="Çekim seçin" />
                             </SelectTrigger>
                             <SelectContent>
-                                {employees.map((e) => (
-                                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                                <SelectItem value="none">Seçilmedi</SelectItem>
+                                {shoots.map((s) => (
+                                    <SelectItem key={s.id} value={s.id}>
+                                        {s.customer?.name} - {s.title}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        {form.formState.errors.relatedId && <p className="text-xs text-red-500">{form.formState.errors.relatedId.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Ödeme Yapılacak Personeller</label>
+                        <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-slate-50/50">
+                            {(() => {
+                                const selectedShootId = form.watch("shootId")
+                                const selectedShoot = shoots.find(s => s.id === selectedShootId)
+                                const assignedStaffIds = selectedShoot?.staffIds?.map((id: any) => id.toString()) || []
+
+                                const filteredEmployees = selectedShootId && selectedShootId !== "none"
+                                    ? employees.filter(e => assignedStaffIds.includes(e.id))
+                                    : employees;
+
+                                if (filteredEmployees.length === 0) {
+                                    return <p className="text-xs text-muted-foreground w-full text-center py-2">Uygun personel bulunamadı</p>
+                                }
+
+                                return filteredEmployees.map((e) => {
+                                    const isSelected = form.watch("relatedIds").includes(e.id)
+                                    const isAssigned = assignedStaffIds.includes(e.id)
+
+                                    // Ödeme durumunu kontrol et
+                                    let paymentStatus = null;
+                                    if (isAssigned && selectedShootId && selectedShootId !== "none") {
+                                        const hasPayment = transactions.some(t =>
+                                            t.type === "EXPENSE" &&
+                                            t.category === "PERSONNEL_PAYMENT" &&
+                                            t.relatedId?.toString() === e.id &&
+                                            t.shootId?.toString() === selectedShootId
+                                        );
+                                        paymentStatus = hasPayment ? "Ödendi" : "Bekliyor";
+                                    }
+
+                                    return (
+                                        <button
+                                            key={e.id}
+                                            type="button"
+                                            onClick={() => {
+                                                const current = form.getValues("relatedIds")
+                                                if (isSelected) {
+                                                    form.setValue("relatedIds", current.filter(id => id !== e.id))
+                                                } else {
+                                                    form.setValue("relatedIds", [...current, e.id])
+                                                }
+                                            }}
+                                            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all flex items-center gap-1.5 ${isSelected
+                                                ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200"
+                                                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                                                }`}
+                                        >
+                                            {e.name}
+                                            {paymentStatus === "Ödendi" && (
+                                                <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white" : "bg-emerald-500"}`} />
+                                            )}
+                                            {paymentStatus === "Bekliyor" && (
+                                                <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white" : "bg-red-500 animate-pulse"}`} />
+                                            )}
+                                        </button>
+                                    )
+                                })
+                            })()}
+                        </div>
+                        {form.formState.errors.relatedIds && (
+                            <p className="text-xs text-red-500">{form.formState.errors.relatedIds.message}</p>
+                        )}
                     </div>
                     <div className="flex gap-4">
                         <div className="space-y-2 flex-1">

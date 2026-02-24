@@ -10,6 +10,8 @@ import {
     CheckSquare,
     UserCircle,
     Package,
+    Truck,
+    Building2,
 } from "lucide-react"
 
 import {
@@ -37,6 +39,7 @@ const allMenuItems = [
     { title: "Personel", url: "/employees", icon: UserCircle, adminOnly: true },
     { title: "Stok Yönetimi", url: "/inventory", icon: Package, adminOnly: true },
     { title: "Finans", url: "/finance", icon: CreditCard, adminOnly: true },
+    { title: "Teslimat & Firmalar", url: "/deliveries", icon: Truck, adminOnly: false },
 ]
 
 export function AppSidebar() {

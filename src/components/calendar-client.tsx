@@ -21,17 +21,23 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
+import { EditShootDialog } from "./edit-shoot-dialog"
 
 interface CalendarClientProps {
     initialEvents: any[]
+    customers: any[]
+    companies: any[]
+    employees: any[]
+    inventory: any[]
 }
 
-export function CalendarClient({ initialEvents }: CalendarClientProps) {
+export function CalendarClient({ initialEvents, customers, companies, employees, inventory }: CalendarClientProps) {
     const calendarRef = useRef<FullCalendar>(null)
     const [view, setView] = useState("dayGridMonth")
     const [events, setEvents] = useState(initialEvents || [])
     const [selectedEvent, setSelectedEvent] = useState<any>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [isEditOpen, setIsEditOpen] = useState(false)
     const [title, setTitle] = useState("")
 
     useEffect(() => {
@@ -210,6 +216,18 @@ export function CalendarClient({ initialEvents }: CalendarClientProps) {
                 </CardContent>
             </Card>
 
+            {selectedEvent && (
+                <EditShootDialog
+                    shoot={selectedEvent}
+                    customers={customers}
+                    companies={companies}
+                    employees={employees}
+                    inventory={inventory}
+                    open={isEditOpen}
+                    onOpenChange={setIsEditOpen}
+                />
+            )}
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
@@ -223,6 +241,11 @@ export function CalendarClient({ initialEvents }: CalendarClientProps) {
                         </DialogTitle>
                         <DialogDescription>
                             {selectedEvent?.title}
+                            {selectedEvent?.company && (
+                                <div className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded inline-block ml-2">
+                                    {selectedEvent.company.name}
+                                </div>
+                            )}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -291,8 +314,8 @@ export function CalendarClient({ initialEvents }: CalendarClientProps) {
 
                     </div>
 
-                    <DialogFooter>
-                        <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>Kapat</Button>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setIsEditOpen(true)}>Düzenle</Button>
                         <Button onClick={() => window.location.href = `/shoots/${selectedEvent?.id}`}>Detaya Git</Button>
                     </DialogFooter>
                 </DialogContent>

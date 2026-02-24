@@ -1,8 +1,10 @@
 "use server"
 
-import { getDb, jsonify } from "@/lib/mongodb"
+import { getDb, jsonify, isValidObjectId } from "@/lib/mongodb"
 import { revalidatePath } from "next/cache"
 import { ObjectId } from "mongodb"
+
+
 
 export async function createShoot(formData: any) {
     try {
@@ -12,8 +14,10 @@ export async function createShoot(formData: any) {
             status: "PLANNED",
             createdAt: new Date(),
             updatedAt: new Date(),
-            customerId: new ObjectId(formData.customerId),
-            staffIds: (formData.staffIds || []).map((id: string) => new ObjectId(id))
+            customerId: isValidObjectId(formData.customerId) ? new ObjectId(formData.customerId) : formData.customerId,
+            companyId: isValidObjectId(formData.companyId) ? new ObjectId(formData.companyId) : null,
+            staffIds: (formData.staffIds || []).filter(isValidObjectId).map((id: string) => new ObjectId(id))
+
         }
 
         const result = await db.collection("Shoot").insertOne(shootData)
@@ -84,6 +88,37 @@ export async function getShoots(searchQuery?: string) {
                 }
             },
             {
+                $lookup: {
+                    from: "Company",
+                    let: { compId: "$companyId" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $or: [
+                                        { $eq: ["$_id", "$$compId"] },
+                                        {
+                                            $cond: [
+                                                {
+                                                    $and: [
+                                                        { $eq: [{ $type: "$$compId" }, "string"] },
+                                                        { $regexMatch: { input: "$$compId", regex: "^[0-9a-fA-F]{24}$" } }
+                                                    ]
+                                                },
+                                                { $eq: ["$_id", { $toObjectId: "$$compId" }] },
+                                                false
+                                            ]
+                                        }
+                                    ]
+
+                                }
+                            }
+                        }
+                    ],
+                    as: "companyInfo"
+                }
+            },
+            {
                 $unwind: {
                     path: "$customerInfo",
                     preserveNullAndEmptyArrays: true
@@ -119,6 +154,11 @@ export async function getShoots(searchQuery?: string) {
                 ...s.customerInfo,
                 id: s.customerInfo._id.toString(),
                 _id: s.customerInfo._id.toString(),
+            } : null,
+            company: s.companyInfo && s.companyInfo[0] ? {
+                ...s.companyInfo[0],
+                id: s.companyInfo[0]._id.toString(),
+                _id: s.companyInfo[0]._id.toString(),
             } : null,
             staffs: (s.staffsInfo || []).map((st: any) => ({
                 ...st,
@@ -157,6 +197,37 @@ export async function getShoot(id: string) {
                         }
                     ],
                     as: "customerInfo"
+                }
+            },
+            {
+                $lookup: {
+                    from: "Company",
+                    let: { compId: "$companyId" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $or: [
+                                        { $eq: ["$_id", "$$compId"] },
+                                        {
+                                            $cond: [
+                                                {
+                                                    $and: [
+                                                        { $eq: [{ $type: "$$compId" }, "string"] },
+                                                        { $regexMatch: { input: "$$compId", regex: "^[0-9a-fA-F]{24}$" } }
+                                                    ]
+                                                },
+                                                { $eq: ["$_id", { $toObjectId: "$$compId" }] },
+                                                false
+                                            ]
+                                        }
+                                    ]
+
+                                }
+                            }
+                        }
+                    ],
+                    as: "companyInfo"
                 }
             },
             {
@@ -207,6 +278,11 @@ export async function getShoot(id: string) {
                 id: s.customerInfo._id.toString(),
                 _id: s.customerInfo._id.toString(),
             } : null,
+            company: s.companyInfo && s.companyInfo[0] ? {
+                ...s.companyInfo[0],
+                id: s.companyInfo[0]._id.toString(),
+                _id: s.companyInfo[0]._id.toString(),
+            } : null,
             staffs: (s.staffsInfo || []).map((st: any) => ({
                 ...st,
                 id: st._id.toString(),
@@ -247,8 +323,10 @@ export async function updateShoot(id: string, formData: any) {
                 $set: {
                     ...updateData,
                     updatedAt: new Date(),
-                    customerId: new ObjectId(updateData.customerId),
-                    staffIds: (updateData.staffIds || []).map((id: string) => new ObjectId(id))
+                    customerId: isValidObjectId(updateData.customerId) ? new ObjectId(updateData.customerId) : updateData.customerId,
+                    companyId: isValidObjectId(updateData.companyId) ? new ObjectId(updateData.companyId) : null,
+                    staffIds: (updateData.staffIds || []).filter(isValidObjectId).map((id: string) => new ObjectId(id))
+
                 }
             }
         )
@@ -323,4 +401,26 @@ export async function updateShootPrice(shootId: string, newPrice: number) {
         return { success: false, error: error.message }
     }
 }
+
+export async function toggleDeliveryStatus(shootId: string, currentStatus: string) {
+    try {
+        const db = await getDb()
+        const newStatus = currentStatus === "DELIVERED" ? "COMPLETED" : "DELIVERED"
+
+        await db.collection("Shoot").updateOne(
+            { _id: new ObjectId(shootId) },
+            { $set: { deliveryStatus: newStatus, updatedAt: new Date() } }
+        )
+
+        revalidatePath("/deliveries")
+        revalidatePath("/shoots")
+        revalidatePath("/dashboard")
+
+        return { success: true, newStatus }
+    } catch (error: any) {
+        console.error("Toggle delivery status error:", error)
+        return { success: false, error: error.message }
+    }
+}
+
 

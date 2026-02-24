@@ -1,4 +1,5 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ServerApiVersion, ObjectId } from "mongodb";
+
 
 if (!process.env.DATABASE_URL) {
     throw new Error('Invalid/Missing environment variable: "DATABASE_URL"');
@@ -52,3 +53,10 @@ export function jsonify(obj: any): any {
     if (!obj) return obj;
     return JSON.parse(JSON.stringify(obj));
 }
+
+export function isValidObjectId(id: any): boolean {
+    if (!id || typeof id !== "string") return false;
+    if (id === "none" || id === "none_company" || id === "none_customer") return false;
+    return /^[0-9a-fA-F]{24}$/.test(id);
+}
+

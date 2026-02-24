@@ -20,6 +20,7 @@ import { getShoots } from "@/actions/shoot-actions"
 import { getCustomers } from "@/actions/customer-actions"
 import { getEmployees } from "@/actions/employee-actions"
 import { getInventory } from "@/actions/inventory-actions"
+import { getCompanies } from "@/actions/company-actions"
 import { AddShootDialog } from "@/components/add-shoot-dialog"
 import { ShootActionsMenu } from "@/components/shoot-actions-menu"
 import Link from "next/link"
@@ -33,6 +34,7 @@ export default async function ShootsPage({
     const query = params.query || ""
     const shoots = await getShoots(query)
     const customers = await getCustomers()
+    const companies = await getCompanies()
     const employees = await getEmployees()
     const inventory = await getInventory()
 
@@ -43,7 +45,7 @@ export default async function ShootsPage({
                     <h2 className="text-3xl font-bold tracking-tight">Çekimler</h2>
                     <p className="text-muted-foreground">Stüdyo çekimlerini, randevuları ve iş süreçlerini takip edin.</p>
                 </div>
-                <AddShootDialog customers={customers} employees={employees} inventory={inventory} />
+                <AddShootDialog customers={customers} companies={companies} employees={employees} inventory={inventory} />
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -78,6 +80,11 @@ export default async function ShootsPage({
                                     <TableCell>
                                         <Link href={`/shoots/${shoot.id}`} className="block group">
                                             <div className="font-medium group-hover:text-blue-600 transition-colors">{shoot.customer?.name}</div>
+                                            {shoot.company && (
+                                                <div className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                                                    {shoot.company.name}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-muted-foreground flex items-center gap-1">
                                                 {shoot.title}
                                                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -114,7 +121,7 @@ export default async function ShootsPage({
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
                                                 <MessageCircle className="w-4 h-4" />
                                             </Button>
-                                            <ShootActionsMenu shoot={shoot} customers={customers} employees={employees} inventory={inventory} />
+                                            <ShootActionsMenu shoot={shoot} customers={customers} companies={companies} employees={employees} inventory={inventory} />
                                         </div>
                                     </TableCell>
                                 </TableRow>

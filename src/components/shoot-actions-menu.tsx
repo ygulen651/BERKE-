@@ -16,11 +16,12 @@ import { useRouter } from "next/navigation"
 interface ShootActionsMenuProps {
     shoot: any
     customers: any[]
+    companies: any[]
     employees: any[]
     inventory: any[]
 }
 
-export function ShootActionsMenu({ shoot, customers, employees, inventory }: ShootActionsMenuProps) {
+export function ShootActionsMenu({ shoot, customers, companies, employees, inventory }: ShootActionsMenuProps) {
     const [isDeleting, setIsDeleting] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const router = useRouter()
@@ -68,6 +69,7 @@ export function ShootActionsMenu({ shoot, customers, employees, inventory }: Sho
             <EditShootDialog
                 shoot={shoot}
                 customers={customers}
+                companies={companies}
                 employees={employees}
                 inventory={inventory}
                 open={editOpen}

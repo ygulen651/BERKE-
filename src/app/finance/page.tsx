@@ -31,6 +31,35 @@ export default async function FinancePage() {
         totalRemainingBalance
     } = await getFinanceStats()
 
+    // Bekleyen personel ödemelerini hesapla
+    const pendingPayments: any[] = []
+    shoots.forEach((shoot: any) => {
+        const assignedStaffIds = shoot.staffIds?.map((id: any) => id.toString()) || []
+        if (assignedStaffIds.length === 0) return
+
+        const unpaidStaff = assignedStaffIds.filter((staffId: string) => {
+            // Bu çekim ve bu personel için ödeme kaydı var mı?
+            return !transactions.some((t: any) =>
+                t.type === "EXPENSE" &&
+                t.category === "PERSONNEL_PAYMENT" &&
+                t.shootId === shoot.id &&
+                t.relatedId === staffId
+            )
+        }).map((staffId: string) => {
+            const employee = employees.find((e: any) => e.id === staffId)
+            return employee ? employee.name : "Bilinmeyen Personel"
+        })
+
+        if (unpaidStaff.length > 0) {
+            pendingPayments.push({
+                shootId: shoot.id,
+                shootTitle: shoot.title,
+                customerName: shoot.customer?.name,
+                unpaidStaff
+            })
+        }
+    })
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -40,7 +69,7 @@ export default async function FinancePage() {
                 </div>
                 <div className="flex gap-2">
                     <AddIncomeDialog shoots={shoots} inventory={inventory} />
-                    <AddPaymentDialog employees={employees} />
+                    <AddPaymentDialog employees={employees} shoots={shoots} transactions={transactions} />
                 </div>
             </div>
 
@@ -109,6 +138,35 @@ export default async function FinancePage() {
                 </Card>
             </div>
 
+            {pendingPayments.length > 0 && (
+                <Card className="border-red-200 bg-red-50/20">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-bold text-red-800 flex items-center gap-2">
+                            <ArrowDownRight className="w-4 h-4" />
+                            Bekleyen Personel Ödemeleri
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {pendingPayments.map((p, idx) => (
+                                <div key={idx} className="bg-white p-3 rounded-lg border border-red-100 shadow-sm">
+                                    <div className="text-xs font-semibold text-slate-500 mb-1">
+                                        {p.customerName} - {p.shootTitle}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {p.unpaidStaff.map((name: string, i: number) => (
+                                            <Badge key={i} variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-100 border-none font-medium">
+                                                {name}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card>
                 <CardHeader>
                     <CardTitle>Son Finansal Hareketler</CardTitle>
@@ -160,6 +218,34 @@ export default async function FinancePage() {
                                                 </td>
                                                 <td className={`p-3 text-right font-bold ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-red-600'}`}>
                                                     {t.type === 'INCOME' ? '+' : '-'}₺{t.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                                                    {(() => {
+                                                        if (t.type === 'EXPENSE' && t.category === 'PERSONNEL_PAYMENT' && t.shootId) {
+                                                            const shoot = shoots.find((s: any) => s.id === t.shootId)
+                                                            if (shoot) {
+                                                                const assignedStaffIds = shoot.staffIds?.map((id: any) => id.toString()) || []
+                                                                const unpaidStaff = assignedStaffIds.filter((staffId: string) => {
+                                                                    return !transactions.some((tr: any) =>
+                                                                        tr.type === "EXPENSE" &&
+                                                                        tr.category === "PERSONNEL_PAYMENT" &&
+                                                                        tr.shootId === shoot.id &&
+                                                                        tr.relatedId === staffId
+                                                                    )
+                                                                }).map((staffId: string) => {
+                                                                    const employee = employees.find((e: any) => e.id === staffId)
+                                                                    return employee?.name
+                                                                }).filter(Boolean)
+
+                                                                if (unpaidStaff.length > 0) {
+                                                                    return (
+                                                                        <div className="text-[10px] text-red-500 font-medium mt-1">
+                                                                            Bekleyen: {unpaidStaff.join(", ")}
+                                                                        </div>
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                        return null
+                                                    })()}
                                                 </td>
                                                 <td className="p-3 text-right">
                                                     <TransactionActionsMenu

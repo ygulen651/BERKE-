@@ -45,6 +45,7 @@ const EXTRAS = [
 
 const formSchema = z.object({
     customerId: z.string().min(1, "Müşteri seçimi gereklidir"),
+    companyId: z.string().optional().or(z.literal("")),
     title: z.string().min(2, "Çekim adı/başlığı gereklidir"),
     type: z.string().min(1, "Çekim türü gereklidir"),
     date: z.string().min(1, "Tarih seçilmelidir"),
@@ -62,11 +63,12 @@ type FormValues = z.infer<typeof formSchema>
 
 interface AddShootDialogProps {
     customers: any[]
+    companies: any[]
     employees: any[]
     inventory: any[]
 }
 
-export function AddShootDialog({ customers, employees, inventory }: AddShootDialogProps) {
+export function AddShootDialog({ customers, companies, employees, inventory }: AddShootDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [selectedExtras, setSelectedExtras] = useState<string[]>([])
@@ -91,6 +93,7 @@ export function AddShootDialog({ customers, employees, inventory }: AddShootDial
         resolver: zodResolver(formSchema) as any,
         defaultValues: {
             customerId: "",
+            companyId: "",
             title: "",
             type: "Düğün",
             date: "",
@@ -113,6 +116,7 @@ export function AddShootDialog({ customers, employees, inventory }: AddShootDial
 
         const result = await createShoot({
             customerId: values.customerId,
+            companyId: values.companyId || null,
             title: values.title,
             type: values.type,
             startDateTime,
@@ -170,8 +174,8 @@ export function AddShootDialog({ customers, employees, inventory }: AddShootDial
                                                 type="button"
                                                 onClick={() => toggleStaff(e.id)}
                                                 className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${isSelected
-                                                        ? "bg-blue-600 border-blue-600 text-white"
-                                                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                                                    ? "bg-blue-600 border-blue-600 text-white"
+                                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
                                                     }`}
                                             >
                                                 {e.name}
@@ -184,8 +188,8 @@ export function AddShootDialog({ customers, employees, inventory }: AddShootDial
                                 <p className="text-xs text-red-500">{form.formState.errors.staffIds.message}</p>
                             )}
                         </div>
-                        {/* Müşteri */}
-                        <div className="space-y-2 col-span-2">
+                        {/* Müşteri & Firma */}
+                        <div className="space-y-2">
                             <label className="text-sm font-medium">Müşteri Seçin</label>
                             <Select onValueChange={(val) => form.setValue("customerId", val)}>
                                 <SelectTrigger>
@@ -199,6 +203,20 @@ export function AddShootDialog({ customers, employees, inventory }: AddShootDial
                                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                         ))
                                     )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Firma Seçin (Opsiyonel)</label>
+                            <Select onValueChange={(val) => form.setValue("companyId", val)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Firma ara/seç" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none_company">Firma Yok</SelectItem>
+                                    {companies?.map((c) => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -10,6 +10,7 @@ import {
     Calendar as CalendarIcon
 } from "lucide-react"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 import { getShoots } from "@/actions/shoot-actions"
 import { getTasks } from "@/actions/task-actions"
 import { getCustomers } from "@/actions/customer-actions"
@@ -104,22 +105,54 @@ export default async function DashboardPage() {
                             {shoots.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground text-sm">Henüz çekim kaydı yok.</p>
                             ) : (
-                                (shoots as any[]).slice(0, 5).map((shoot: any) => (
-                                    <div key={shoot.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
-                                        <div className="bg-primary/10 p-2 rounded text-primary">
-                                            <CalendarIcon className="w-4 h-4" />
+                                (shoots as any[]).slice(0, 5).map((shoot: any) => {
+                                    const totalPrice = parseFloat(shoot.totalPrice || 0)
+                                    const deposit = parseFloat(shoot.deposit || 0)
+                                    const remaining = totalPrice - deposit
+
+                                    return (
+                                        <div key={shoot.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                            <div className="bg-primary/10 p-2 rounded text-primary flex-shrink-0">
+                                                <CalendarIcon className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm truncate">
+                                                    {shoot.customer?.name}
+                                                    {shoot.company && (
+                                                        <span className="text-[10px] ml-2 text-blue-600 font-bold bg-blue-50 px-1 rounded">
+                                                            {shoot.company.name}
+                                                        </span>
+                                                    )}
+                                                </h4>
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {shoot.title} - {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}
+                                                </p>
+                                                <div className="mt-1 flex gap-2">
+                                                    {totalPrice > 0 ? (
+                                                        remaining > 0 ? (
+                                                            <Badge variant="outline" className="text-[10px] h-5 bg-red-50 text-red-600 border-red-100 font-bold">
+                                                                Kalan: ₺{remaining.toLocaleString("tr-TR")}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-600 border-emerald-100 font-bold">
+                                                                Ödendi
+                                                            </Badge>
+                                                        )
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-[10px] h-5 bg-slate-50 text-slate-500 border-slate-100 italic">
+                                                            Fiyat Girilmemiş
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {isAdmin && (
+                                                <Link href={`/shoots/${shoot.id}`} className="ml-auto flex-shrink-0">
+                                                    <Button variant="ghost" size="sm">Detay</Button>
+                                                </Link>
+                                            )}
                                         </div>
-                                        <div>
-                                            <h4 className="font-semibold text-sm">{shoot.customer?.name}</h4>
-                                            <p className="text-xs text-muted-foreground">{shoot.title} - {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}</p>
-                                        </div>
-                                        {isAdmin && (
-                                            <Link href={`/shoots/${shoot.id}`} className="ml-auto">
-                                                <Button variant="ghost" size="sm">Detay</Button>
-                                            </Link>
-                                        )}
-                                    </div>
-                                ))
+                                    )
+                                })
                             )}
                         </div>
                     </CardContent>

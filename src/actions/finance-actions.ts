@@ -7,22 +7,34 @@ import { ObjectId } from "mongodb"
 export async function createTransaction(formData: any) {
     try {
         const db = await getDb()
-        const transactionData = {
-            ...formData,
-            amount: parseFloat(formData.amount),
-            date: formData.date ? new Date(formData.date) : new Date(),
+        const { relatedIds, ...baseData } = formData
+        const baseTransaction = {
+            ...baseData,
+            amount: parseFloat(baseData.amount),
+            date: baseData.date ? new Date(baseData.date) : new Date(),
             createdAt: new Date(),
-            relatedId: formData.relatedId ? new ObjectId(formData.relatedId) : null,
+            shootId: baseData.shootId ? new ObjectId(baseData.shootId) : null,
         }
 
-        const result = await db.collection("Transaction").insertOne(transactionData)
+        if (relatedIds && Array.isArray(relatedIds) && relatedIds.length > 0) {
+            const records = relatedIds.map((id: string) => ({
+                ...baseTransaction,
+                relatedId: new ObjectId(id)
+            }))
+            await db.collection("Transaction").insertMany(records)
+        } else {
+            const transactionData = {
+                ...baseTransaction,
+                relatedId: baseData.relatedId ? new ObjectId(baseData.relatedId) : null
+            }
+            await db.collection("Transaction").insertOne(transactionData)
+        }
 
         revalidatePath("/finance")
         revalidatePath("/dashboard")
 
         return jsonify({
-            success: true,
-            transaction: { ...transactionData, id: result.insertedId.toString() }
+            success: true
         })
     } catch (error: any) {
         console.error("Transaction creation error:", error)
@@ -148,6 +160,7 @@ export async function updateTransaction(id: string, formData: any) {
             date: formData.date ? new Date(formData.date) : new Date(),
             updatedAt: new Date(),
             relatedId: formData.relatedId ? new ObjectId(formData.relatedId) : null,
+            shootId: formData.shootId ? new ObjectId(formData.shootId) : null,
         }
 
         // Remove ID from updated data to avoid Mongo error
