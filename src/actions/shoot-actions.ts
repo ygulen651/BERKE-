@@ -14,8 +14,9 @@ export async function createShoot(formData: any) {
             status: "PLANNED",
             createdAt: new Date(),
             updatedAt: new Date(),
-            customerId: isValidObjectId(formData.customerId) ? new ObjectId(formData.customerId) : formData.customerId,
+            customerId: isValidObjectId(formData.customerId) ? new ObjectId(formData.customerId) : null,
             companyId: isValidObjectId(formData.companyId) ? new ObjectId(formData.companyId) : null,
+
             staffIds: (formData.staffIds || []).filter(isValidObjectId).map((id: string) => new ObjectId(id))
 
         }
@@ -323,8 +324,9 @@ export async function updateShoot(id: string, formData: any) {
                 $set: {
                     ...updateData,
                     updatedAt: new Date(),
-                    customerId: isValidObjectId(updateData.customerId) ? new ObjectId(updateData.customerId) : updateData.customerId,
+                    customerId: isValidObjectId(updateData.customerId) ? new ObjectId(updateData.customerId) : null,
                     companyId: isValidObjectId(updateData.companyId) ? new ObjectId(updateData.companyId) : null,
+
                     staffIds: (updateData.staffIds || []).filter(isValidObjectId).map((id: string) => new ObjectId(id))
 
                 }

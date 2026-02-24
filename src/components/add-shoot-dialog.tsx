@@ -44,7 +44,7 @@ const EXTRAS = [
 ]
 
 const formSchema = z.object({
-    customerId: z.string().min(1, "Müşteri seçimi gereklidir"),
+    customerId: z.string().optional().or(z.literal("")),
     companyId: z.string().optional().or(z.literal("")),
     title: z.string().min(2, "Çekim adı/başlığı gereklidir"),
     type: z.string().min(1, "Çekim türü gereklidir"),
@@ -57,7 +57,15 @@ const formSchema = z.object({
     totalPrice: z.coerce.number().min(0),
     deposit: z.coerce.number().min(0),
     staffIds: z.array(z.string()).max(5, "En fazla 5 personel seçebilirsiniz"),
+}).refine(data => {
+    const hasCustomer = data.customerId && data.customerId !== "none" && data.customerId !== ""
+    const hasCompany = data.companyId && data.companyId !== "none_company" && data.companyId !== ""
+    return hasCustomer || hasCompany
+}, {
+    message: "Lütfen bir müşteri veya bir firma seçin",
+    path: ["customerId"]
 })
+
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -190,25 +198,47 @@ export function AddShootDialog({ customers, companies, employees, inventory }: A
                         </div>
                         {/* Müşteri & Firma */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Müşteri Seçin</label>
-                            <Select onValueChange={(val) => form.setValue("customerId", val)}>
+                            <label className={`text-sm font-medium ${form.watch("companyId") && form.watch("companyId") !== "none_company" ? "opacity-50" : ""}`}>
+                                Müşteri Seçin
+                            </label>
+                            <Select
+                                value={form.watch("customerId") || "none"}
+                                onValueChange={(val) => {
+                                    form.setValue("customerId", val)
+                                    if (val !== "none") {
+                                        form.setValue("companyId", "none_company")
+                                    }
+                                }}
+                                disabled={!!(form.watch("companyId") && form.watch("companyId") !== "none_company")}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Müşteri ara/seç" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {customers.length === 0 ? (
-                                        <SelectItem value="none" disabled>Müşteri kaydı yok</SelectItem>
-                                    ) : (
-                                        customers.map((c) => (
-                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                        ))
-                                    )}
+                                    <SelectItem value="none">Seçilmedi</SelectItem>
+                                    {customers.map((c) => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            {form.formState.errors.customerId && (
+                                <p className="text-[10px] text-red-500 font-medium">{form.formState.errors.customerId.message}</p>
+                            )}
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Firma Seçin (Opsiyonel)</label>
-                            <Select onValueChange={(val) => form.setValue("companyId", val)}>
+                            <label className={`text-sm font-medium ${form.watch("customerId") && form.watch("customerId") !== "none" ? "opacity-50" : ""}`}>
+                                Firma Seçin (Opsiyonel)
+                            </label>
+                            <Select
+                                value={form.watch("companyId") || "none_company"}
+                                onValueChange={(val) => {
+                                    form.setValue("companyId", val)
+                                    if (val !== "none_company") {
+                                        form.setValue("customerId", "none")
+                                    }
+                                }}
+                                disabled={!!(form.watch("customerId") && form.watch("customerId") !== "none" && form.watch("customerId") !== "")}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Firma ara/seç" />
                                 </SelectTrigger>
@@ -220,6 +250,7 @@ export function AddShootDialog({ customers, companies, employees, inventory }: A
                                 </SelectContent>
                             </Select>
                         </div>
+
 
                         {/* Başlık */}
                         <div className="space-y-2 col-span-2">
