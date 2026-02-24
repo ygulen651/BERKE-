@@ -58,8 +58,28 @@ export async function getShoots(searchQuery?: string) {
             {
                 $lookup: {
                     from: "User",
-                    localField: "staffIds",
-                    foreignField: "_id",
+                    let: { staff_ids: { $ifNull: ["$staffIds", []] } },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ["$_id", {
+                                        $map: {
+                                            input: "$$staff_ids",
+                                            as: "id",
+                                            in: {
+                                                $cond: [
+                                                    { $eq: [{ $type: "$$id" }, "string"] },
+                                                    { $toObjectId: "$$id" },
+                                                    "$$id"
+                                                ]
+                                            }
+                                        }
+                                    }]
+                                }
+                            }
+                        }
+                    ],
                     as: "staffsInfo"
                 }
             },
@@ -123,16 +143,47 @@ export async function getShoot(id: string) {
             {
                 $lookup: {
                     from: "Customer",
-                    localField: "customerId",
-                    foreignField: "_id",
+                    let: { custId: "$customerId" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $or: [
+                                        { $eq: ["$_id", "$$custId"] },
+                                        { $eq: ["$_id", { $cond: [{ $eq: [{ $type: "$$custId" }, "string"] }, { $toObjectId: "$$custId" }, "$$custId"] }] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
                     as: "customerInfo"
                 }
             },
             {
                 $lookup: {
                     from: "User",
-                    localField: "staffIds",
-                    foreignField: "_id",
+                    let: { staff_ids: { $ifNull: ["$staffIds", []] } },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ["$_id", {
+                                        $map: {
+                                            input: "$$staff_ids",
+                                            as: "id",
+                                            in: {
+                                                $cond: [
+                                                    { $eq: [{ $type: "$$id" }, "string"] },
+                                                    { $toObjectId: "$$id" },
+                                                    "$$id"
+                                                ]
+                                            }
+                                        }
+                                    }]
+                                }
+                            }
+                        }
+                    ],
                     as: "staffsInfo"
                 }
             },

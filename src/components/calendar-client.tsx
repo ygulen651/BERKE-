@@ -72,8 +72,10 @@ export function CalendarClient({ initialEvents }: CalendarClientProps) {
     }
 
     const handleEventClick = (info: any) => {
+        const eventProps = info.event.extendedProps;
         setSelectedEvent({
-            ...info.event.extendedProps,
+            ...eventProps,
+            id: info.event.id,
             start: info.event.start,
             end: info.event.end,
             title: info.event.title
@@ -268,7 +270,11 @@ export function CalendarClient({ initialEvents }: CalendarClientProps) {
                             </div>
                             <div className="space-y-0.5">
                                 <p className="text-sm font-medium text-slate-500">Görevli Personel</p>
-                                <p className="text-sm font-semibold">{(selectedEvent as any)?.extendedProps?.staffName || "Atanmamış"}</p>
+                                <p className="text-sm font-semibold">
+                                    {selectedEvent?.staffs && selectedEvent.staffs.length > 0
+                                        ? selectedEvent.staffs.map((st: any) => st.name).join(", ")
+                                        : "Atanmamış"}
+                                </p>
                             </div>
                         </div>
 
