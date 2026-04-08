@@ -15,7 +15,7 @@ import {
     Timestamp 
 } from "firebase/firestore"
 
-export async function createEmployee(formData: any) {
+export async function createEmployee(formData: Record<string, unknown>) {
     try {
         const employeeData = {
             ...formData,
@@ -31,9 +31,9 @@ export async function createEmployee(formData: any) {
             user: { ...formData, id: docRef.id },
             temporaryPassword: formData.password || "berke123"
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Employee creation error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
 
@@ -42,9 +42,9 @@ export async function deleteEmployee(userId: string) {
         await deleteDoc(doc(db, "User", userId))
         revalidatePath("/employees")
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Employee deletion error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
 
@@ -86,9 +86,9 @@ export async function changeEmployeeRole(userId: string, newRole: "ADMIN" | "EMP
         })
         revalidatePath("/employees")
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Change role error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
 

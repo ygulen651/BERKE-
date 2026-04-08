@@ -41,17 +41,19 @@ export async function POST(req: Request) {
         )
 
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Registration error:", error)
         let message = "Bir hata oluştu. Lütfen tekrar deneyin."
-        if (error.code === "auth/email-already-in-use") {
+        if (error instanceof Error && 'code' in error && error.code === "auth/email-already-in-use") {
             message = "bu e-posta adresi zaten kullanımda."
         }
+
         return NextResponse.json(
             { message },
             { status: 500 }
         )
     }
+
 }
 
 
