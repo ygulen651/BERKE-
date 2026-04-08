@@ -64,11 +64,13 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             if (session.user) {
-                (session.user as any).role = token.role ? token.role.toString().toUpperCase() : "EMPLOYEE"
-                (session.user as any).id = token.id as string
+                const userRole = (token.role as string) || "EMPLOYEE"
+                ;(session.user as any).role = userRole.toString().toUpperCase()
+                ;(session.user as any).id = token.id as string
             }
             return session
-        },
+        }
+,
     },
 
 
