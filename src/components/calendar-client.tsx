@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useMemo, useRef } from "react"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -23,43 +23,65 @@ import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { EditShootDialog } from "./edit-shoot-dialog"
 
+interface Shoot {
+    id: string
+    title: string
+    type?: string
+    startDateTime: any
+    endDateTime: any
+    customer?: { name: string }
+    company?: { id: string, name: string }
+    location?: string
+    notes?: string
+    staffs?: { id: string, name: string }[]
+    staffIds?: string[]
+}
+
 interface CalendarClientProps {
-    initialEvents: any[]
+    initialEvents: Shoot[]
     customers: any[]
     companies: any[]
     employees: any[]
     inventory: any[]
 }
 
+const getEventColor = (type: string) => {
+    switch (type) {
+        case "Düğün": return "#3b82f6" // blue
+        case "Nişan": return "#8b5cf6" // purple
+        case "Ürün": return "#10b981" // green
+        case "Dış Çekim": return "#f59e0b" // amber
+        default: return "#6366f1" // indigo
+    }
+}
+
 export function CalendarClient({ initialEvents, customers, companies, employees, inventory }: CalendarClientProps) {
     const calendarRef = useRef<FullCalendar>(null)
     const [view, setView] = useState("dayGridMonth")
-    const [events, setEvents] = useState(initialEvents || [])
-    const [selectedEvent, setSelectedEvent] = useState<any>(null)
+    const [selectedEvent, setSelectedEvent] = useState<Shoot | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [isEditOpen, setIsEditOpen] = useState(false)
     const [title, setTitle] = useState("")
 
-    useEffect(() => {
-        if (!initialEvents) return
-        // Format events for FullCalendar
-        const formattedEvents = initialEvents.map(shoot => ({
+    // FullCalendar formatına çevrilmiş eventleri useMemo ile hesapla (useEffect hatasını çözer)
+    const events = useMemo(() => {
+        if (!initialEvents) return []
+        return initialEvents.map((shoot: Shoot) => ({
             id: shoot.id,
             title: `${shoot.customer?.name || 'Müşteri'} - ${shoot.title}`,
             start: shoot.startDateTime,
             end: shoot.endDateTime,
-            backgroundColor: getEventColor(shoot.type),
-            borderColor: getEventColor(shoot.type),
+            backgroundColor: getEventColor(shoot.type || ""),
+            borderColor: getEventColor(shoot.type || ""),
             extendedProps: {
                 ...shoot
             }
         }))
-        setEvents(formattedEvents)
     }, [initialEvents])
 
     const handleViewChange = (newView: string) => {
         setView(newView)
-        const calendarApi = calendarRef.current?.getApi()
+        const calendarApi = calendarRef?.current?.getApi()
         if (calendarApi) {
             calendarApi.changeView(newView)
         }
@@ -77,26 +99,16 @@ export function CalendarClient({ initialEvents, customers, companies, employees,
         calendarRef.current?.getApi().today()
     }
 
-    const handleEventClick = (info: any) => {
-        const eventProps = info.event.extendedProps;
+    const handleEventClick = (info: { event: any }) => {
+        const eventProps = info.event.extendedProps as Shoot;
         setSelectedEvent({
             ...eventProps,
             id: info.event.id,
-            start: info.event.start,
-            end: info.event.end,
+            startDateTime: info.event.start,
+            endDateTime: info.event.end,
             title: info.event.title
         })
         setIsDialogOpen(true)
-    }
-
-    function getEventColor(type: string) {
-        switch (type) {
-            case "Düğün": return "#3b82f6" // blue
-            case "Nişan": return "#8b5cf6" // purple
-            case "Ürün": return "#10b981" // green
-            case "Dış Çekim": return "#f59e0b" // amber
-            default: return "#6366f1" // indigo
-        }
     }
 
     return (
@@ -193,7 +205,7 @@ export function CalendarClient({ initialEvents, customers, companies, employees,
                             allDaySlot={false}
                             eventClick={handleEventClick}
                             navLinks={true}
-                            navLinkDayClick={(date, jsEvent) => {
+                            navLinkDayClick={(date) => {
                                 const calendarApi = calendarRef.current?.getApi()
                                 if (calendarApi && view === "multiMonthYear") {
                                     calendarApi.gotoDate(date)
@@ -257,7 +269,7 @@ export function CalendarClient({ initialEvents, customers, companies, employees,
                             <div className="space-y-0.5">
                                 <p className="text-sm font-medium text-slate-500">Tarih</p>
                                 <p className="text-sm font-semibold">
-                                    {selectedEvent?.start && format(new Date(selectedEvent.start), 'd MMMM yyyy, EEEE', { locale: tr })}
+                                    {selectedEvent?.startDateTime && format(new Date(selectedEvent.startDateTime), 'd MMMM yyyy, EEEE', { locale: tr })}
                                 </p>
                             </div>
                         </div>
@@ -269,8 +281,8 @@ export function CalendarClient({ initialEvents, customers, companies, employees,
                             <div className="space-y-0.5">
                                 <p className="text-sm font-medium text-slate-500">Saat</p>
                                 <p className="text-sm font-semibold">
-                                    {selectedEvent?.start && format(new Date(selectedEvent.start), 'HH:mm', { locale: tr })} -
-                                    {selectedEvent?.end && format(new Date(selectedEvent.end), 'HH:mm', { locale: tr })}
+                                    {selectedEvent?.startDateTime && format(new Date(selectedEvent.startDateTime), 'HH:mm', { locale: tr })} -
+                                    {selectedEvent?.endDateTime && format(new Date(selectedEvent.endDateTime), 'HH:mm', { locale: tr })}
                                 </p>
                             </div>
                         </div>
