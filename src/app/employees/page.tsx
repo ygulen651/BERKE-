@@ -2,7 +2,10 @@ import { getEmployees } from "@/actions/employee-actions"
 import { AddEmployeeDialog } from "@/components/add-employee-dialog"
 import { EmployeeList } from "@/components/employee-list"
 
+export const dynamic = 'force-dynamic'
+
 export default async function EmployeesPage() {
+
     const employees = await getEmployees()
 
     return (

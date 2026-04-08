@@ -2,8 +2,10 @@ import { NextResponse } from "next/server"
 import { auth, db } from "@/lib/firebase"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc, serverTimestamp } from "firebase/firestore"
+import { revalidatePath } from "next/cache"
 
 export async function POST(req: Request) {
+
     try {
         const body = await req.json()
         const { name, email, password } = body
@@ -31,10 +33,13 @@ export async function POST(req: Request) {
             updatedAt: serverTimestamp()
         })
 
+        revalidatePath("/employees")
+
         return NextResponse.json(
             { user: { name, email, id: user.uid }, message: "Kayıt başarılı." },
             { status: 201 }
         )
+
 
     } catch (error: any) {
         console.error("Registration error:", error)

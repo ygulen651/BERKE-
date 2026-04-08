@@ -54,18 +54,28 @@ export async function getEmployees() {
         const q = query(employeesRef, orderBy("name"))
         const querySnapshot = await getDocs(q)
         
-        const employees = querySnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id
-        }))
+        const employees = querySnapshot.docs.map(doc => {
+            const data = doc.data()
+            return {
+                ...data,
+                id: doc.id,
+                // Ensure dates are serialized to ISO strings
+                createdAt: data.createdAt instanceof Timestamp 
+                    ? data.createdAt.toDate().toISOString() 
+                    : data.createdAt,
+                updatedAt: data.updatedAt instanceof Timestamp 
+                    ? data.updatedAt.toDate().toISOString() 
+                    : data.updatedAt,
+            }
+        })
 
-        // Serialize timestamps for Next.js
         return JSON.parse(JSON.stringify(employees))
     } catch (error) {
         console.error("Get employees error:", error)
         return []
     }
 }
+
 
 export async function changeEmployeeRole(userId: string, newRole: "ADMIN" | "EMPLOYEE") {
     try {
