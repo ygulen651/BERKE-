@@ -12,10 +12,10 @@ import {
     query, 
     orderBy,
     serverTimestamp,
-    Timestamp 
 } from "firebase/firestore"
 
-export async function createTransaction(formData: any) {
+
+export async function createTransaction(formData: Record<string, unknown>) {
     try {
         const transactionData = {
             ...formData,
@@ -28,11 +28,12 @@ export async function createTransaction(formData: any) {
         revalidatePath("/finance")
         revalidatePath("/dashboard")
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Transaction creation error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 export async function getTransactions() {
     try {
@@ -100,7 +101,7 @@ export async function getFinanceStats() {
     }
 }
 
-export async function updateTransaction(id: string, formData: any) {
+export async function updateTransaction(id: string, formData: Record<string, unknown>) {
     try {
         const transactionRef = doc(db, "Transaction", id)
         await updateDoc(transactionRef, {
@@ -110,11 +111,12 @@ export async function updateTransaction(id: string, formData: any) {
         revalidatePath("/finance")
         revalidatePath("/dashboard")
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Transaction update error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 export async function deleteTransaction(id: string) {
     try {
@@ -122,10 +124,11 @@ export async function deleteTransaction(id: string) {
         revalidatePath("/finance")
         revalidatePath("/dashboard")
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Transaction deletion error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 

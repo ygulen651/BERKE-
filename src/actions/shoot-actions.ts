@@ -12,12 +12,13 @@ import {
     updateDoc, 
     query, 
     orderBy,
+    where,
     serverTimestamp,
     Timestamp
 } from "firebase/firestore"
 
 // Helper to convert Firestore Timestamps to ISO strings
-function serializeDoc(data: any) {
+function serializeDoc(data: Record<string, unknown>): Record<string, unknown> {
     if (!data) return data;
     const serialized = { ...data };
     
@@ -26,15 +27,22 @@ function serializeDoc(data: any) {
         if (value instanceof Timestamp) {
             serialized[key] = value.toDate().toISOString();
         } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-            serialized[key] = serializeDoc(value);
+            serialized[key] = serializeDoc(value as Record<string, unknown>);
         } else if (Array.isArray(value)) {
-            serialized[key] = value.map(item => typeof item === 'object' ? serializeDoc(item) : item);
+            serialized[key] = value.map((item: unknown) => 
+                (item && typeof item === 'object' && !Array.isArray(item)) 
+                    ? serializeDoc(item as Record<string, unknown>) 
+                    : item
+            );
         }
     }
     return serialized;
 }
 
-export async function createShoot(formData: any) {
+
+
+
+export async function createShoot(formData: Record<string, unknown>) {
     try {
         const shootData = {
             ...formData,
@@ -70,14 +78,15 @@ export async function createShoot(formData: any) {
             success: true,
             shoot: { ...formData, id: docRef.id }
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Shoot creation error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
 
 
-export async function getShoots(searchQuery?: string) {
+
+export async function getShoots() {
     try {
         const shootsRef = collection(db, "Shoot")
         const q = query(shootsRef, orderBy("startDateTime", "desc"))
@@ -115,19 +124,52 @@ export async function getShoot(id: string) {
 
 export async function deleteShoot(id: string) {
     try {
+        // 1. Find all transactions related to this shoot
+        // We check both 'relatedId' (direct links/deposits) and 'shootId' (personnel payments)
+        const transactionsRef = collection(db, "Transaction")
+        
+        // Income/Deposits often use relatedId
+        const qRelated = query(transactionsRef, where("relatedId", "==", id))
+        const relatedSnap = await getDocs(qRelated)
+        
+        // Personnel payments often use shootId specifically
+        const qShoot = query(transactionsRef, where("shootId", "==", id))
+        const shootSnap = await getDocs(qShoot)
+        
+        // Combine all and delete them
+        const deletePromises: Promise<void>[] = []
+        
+        relatedSnap.forEach((docSnap: { id: string }) => {
+            deletePromises.push(deleteDoc(doc(db, "Transaction", docSnap.id)))
+        })
+        
+        shootSnap.forEach(docSnap => {
+            // Avoid double-deleting if it was already in relatedSnap
+            if (!relatedSnap.docs.some(d => d.id === docSnap.id)) {
+                deletePromises.push(deleteDoc(doc(db, "Transaction", docSnap.id)))
+            }
+        })
+        
+        await Promise.all(deletePromises)
+
+        // 2. Delete the shoot document itself
         await deleteDoc(doc(db, "Shoot", id))
 
         revalidatePath("/calendar")
         revalidatePath("/shoots")
         revalidatePath("/dashboard")
+        revalidatePath("/finance")
+        
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Shoot deletion error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
 
-export async function updateShoot(id: string, formData: any) {
+
+
+export async function updateShoot(id: string, formData: Record<string, unknown>) {
     try {
         const shootRef = doc(db, "Shoot", id)
         await updateDoc(shootRef, {
@@ -139,11 +181,12 @@ export async function updateShoot(id: string, formData: any) {
         revalidatePath("/shoots")
         revalidatePath("/dashboard")
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Shoot update error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 export async function recordPayment(shootId: string, amount: number, note?: string) {
     try {
@@ -180,11 +223,12 @@ export async function recordPayment(shootId: string, amount: number, note?: stri
         revalidatePath("/finance")
         revalidatePath("/dashboard")
         return { success: true, newDeposit }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Record payment error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 export async function updateShootPrice(shootId: string, newPrice: number) {
     try {
@@ -195,11 +239,12 @@ export async function updateShootPrice(shootId: string, newPrice: number) {
         })
         revalidatePath(`/shoots/${shootId}`)
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Update price error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 export async function toggleDeliveryStatus(shootId: string, currentStatus: string) {
     try {
@@ -211,11 +256,12 @@ export async function toggleDeliveryStatus(shootId: string, currentStatus: strin
         })
         revalidatePath("/deliveries")
         return { success: true, newStatus }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Toggle delivery status error:", error)
-        return { success: false, error: error.message }
+        return { success: false, error: error instanceof Error ? error.message : "Bilinmeyen hata" }
     }
 }
+
 
 
 
