@@ -79,13 +79,14 @@ export default async function ShootsPage({
                                 <TableRow key={shoot.id} className="hover:bg-slate-50 cursor-pointer">
                                     <TableCell>
                                         <Link href={`/shoots/${shoot.id}`} className="block group">
-                                            <div className="font-medium group-hover:text-blue-600 transition-colors">{shoot.customer?.name}</div>
-                                            {shoot.company && (
-                                                <div className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded inline-block mt-0.5">
-                                                    {shoot.company.name}
-                                                </div>
-                                            )}
-                                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                            <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                                {(() => {
+                                                    const customer = customers.find((c: any) => c.id === shoot.customerId)
+                                                    const company = companies.find((c: any) => c.id === shoot.companyId)
+                                                    return customer?.name || company?.name || "Müşteri"
+                                                })()}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                                                 {shoot.title}
                                                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </div>

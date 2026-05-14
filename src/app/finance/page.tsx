@@ -12,6 +12,8 @@ import {
 import { getTransactions, getFinanceStats } from "@/actions/finance-actions"
 import { getEmployees } from "@/actions/employee-actions"
 import { getShoots } from "@/actions/shoot-actions"
+import { getCustomers } from "@/actions/customer-actions"
+import { getCompanies } from "@/actions/company-actions"
 import { getInventory } from "@/actions/inventory-actions"
 import { AddPaymentDialog } from "@/components/add-payment-dialog"
 import { AddIncomeDialog } from "@/components/add-income-dialog"
@@ -22,6 +24,8 @@ export default async function FinancePage() {
     const transactions = await getTransactions()
     const employees = await getEmployees()
     const shoots = await getShoots()
+    const customers = await getCustomers()
+    const companies = await getCompanies()
     const inventory = await getInventory()
     const {
         totalIncome,
@@ -210,12 +214,35 @@ export default async function FinancePage() {
                                                     )}
                                                 </td>
                                                 <td className="p-3">
-                                                    {t.relatedName ? (
-                                                        <Badge variant="outline" className="gap-1 font-normal">
-                                                            <User className="w-3 h-3" />
-                                                            {t.relatedName}
-                                                        </Badge>
-                                                    ) : "-"}
+                                                    {(() => {
+                                                        if (t.relatedName) {
+                                                            return (
+                                                                <Badge variant="outline" className="gap-1 font-normal">
+                                                                    <User className="w-3 h-3" />
+                                                                    {t.relatedName}
+                                                                </Badge>
+                                                            )
+                                                        }
+
+                                                        // If it's a shoot payment, find the shoot's customer
+                                                        const shootId = t.shootId || t.relatedId
+                                                        const shoot = shoots.find((s: any) => s.id === shootId)
+                                                        if (shoot) {
+                                                            const customer = customers.find((c: any) => c.id === shoot.customerId)
+                                                            const company = companies.find((c: any) => c.id === shoot.companyId)
+                                                            const name = customer?.name || company?.name
+                                                            if (name) {
+                                                                return (
+                                                                    <Badge variant="outline" className="gap-1 font-normal bg-blue-50/50 text-blue-700 border-blue-100">
+                                                                        <User className="w-3 h-3" />
+                                                                        {name}
+                                                                    </Badge>
+                                                                )
+                                                            }
+                                                        }
+
+                                                        return "-"
+                                                    })()}
                                                 </td>
                                                 <td className={`p-3 text-right font-bold ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-red-600'}`}>
                                                     {t.type === 'INCOME' ? '+' : '-'}₺{t.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
