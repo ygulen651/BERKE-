@@ -66,18 +66,27 @@ export function CalendarClient({ initialEvents, customers, companies, employees,
     // FullCalendar formatına çevrilmiş eventleri useMemo ile hesapla (useEffect hatasını çözer)
     const events = useMemo(() => {
         if (!initialEvents) return []
-        return initialEvents.map((shoot: Shoot) => ({
-            id: shoot.id,
-            title: `${shoot.customer?.name || 'Müşteri'} - ${shoot.title}`,
-            start: shoot.startDateTime,
-            end: shoot.endDateTime,
-            backgroundColor: getEventColor(shoot.type || ""),
-            borderColor: getEventColor(shoot.type || ""),
-            extendedProps: {
-                ...shoot
+        return initialEvents.map((shoot: Shoot) => {
+            // Find customer or company name
+            const customer = customers.find(c => c.id === (shoot as any).customerId)
+            const company = companies.find(c => c.id === (shoot as any).companyId)
+            const name = customer?.name || company?.name || 'Müşteri'
+
+            return {
+                id: shoot.id,
+                title: `${name} - ${shoot.title}`,
+                start: shoot.startDateTime,
+                end: shoot.endDateTime,
+                backgroundColor: getEventColor(shoot.type || ""),
+                borderColor: getEventColor(shoot.type || ""),
+                extendedProps: {
+                    ...shoot,
+                    customer: customer || shoot.customer,
+                    company: company || shoot.company
+                }
             }
-        }))
-    }, [initialEvents])
+        })
+    }, [initialEvents, customers, companies])
 
     const handleViewChange = (newView: string) => {
         setView(newView)
