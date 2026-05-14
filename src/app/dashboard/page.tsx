@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { getShoots } from "@/actions/shoot-actions"
 import { getTasks } from "@/actions/task-actions"
 import { getCustomers } from "@/actions/customer-actions"
+import { getCompanies } from "@/actions/company-actions"
 import { getFinanceStats } from "@/actions/finance-actions"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
     const shoots = await getShoots()
     const tasks = await getTasks()
     const customers = await getCustomers()
+    const companies = await getCompanies()
     const { totalIncome } = isAdmin ? await getFinanceStats() : { totalIncome: 0 }
 
     const today = new Date().toISOString().split('T')[0]
@@ -117,12 +119,11 @@ export default async function DashboardPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-semibold text-sm truncate">
-                                                    {shoot.customer?.name}
-                                                    {shoot.company && (
-                                                        <span className="text-[10px] ml-2 text-blue-600 font-bold bg-blue-50 px-1 rounded">
-                                                            {shoot.company.name}
-                                                        </span>
-                                                    )}
+                                                    {(() => {
+                                                        const customer = customers.find((c: any) => c.id === shoot.customerId)
+                                                        const company = companies.find((c: any) => c.id === shoot.companyId)
+                                                        return customer?.name || company?.name || "Müşteri"
+                                                    })()}
                                                 </h4>
                                                 <p className="text-xs text-muted-foreground truncate">
                                                     {shoot.title} - {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}
