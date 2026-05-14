@@ -14,6 +14,10 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+console.log("Firebase Project ID:", firebaseConfig.projectId);
+if (!firebaseConfig.apiKey) console.error("Firebase API Key is MISSING!");
+
+
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();

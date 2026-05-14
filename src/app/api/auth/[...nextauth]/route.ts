@@ -32,8 +32,13 @@ export const authOptions: NextAuthOptions = {
 
                     // Get additional user data (role) from Firestore
                     // Note: Collection name is singular "User" based on your screenshot
-                    const userDoc = await getDoc(doc(db, "User", user.uid))
-                    const userData = userDoc.exists() ? userDoc.data() : null
+                    let userData = null;
+                    try {
+                        const userDoc = await getDoc(doc(db, "User", user.uid))
+                        userData = userDoc.exists() ? userDoc.data() : null
+                    } catch (firestoreError: any) {
+                        console.warn("Firestore read failed for UID:", user.uid, firestoreError.message);
+                    }
                     
                     if (!userData) {
                         console.warn("User found in Auth but no profile found in Firestore for UID:", user.uid);

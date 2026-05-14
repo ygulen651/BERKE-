@@ -86,16 +86,24 @@ export async function createShoot(formData: Record<string, unknown>) {
 
 
 
-export async function getShoots() {
+export async function getShoots(searchQuery?: string) {
     try {
         const shootsRef = collection(db, "Shoot")
         const q = query(shootsRef, orderBy("startDateTime", "desc"))
         const querySnapshot = await getDocs(q)
         
-        const shoots = querySnapshot.docs.map(doc => serializeDoc({
+        let shoots = querySnapshot.docs.map(doc => serializeDoc({
             ...doc.data(),
             id: doc.id
         }))
+
+        if (searchQuery) {
+            const searchLower = searchQuery.toLowerCase()
+            shoots = shoots.filter((s: any) => 
+                (s.customer?.name?.toLowerCase() || "").includes(searchLower) ||
+                (s.title?.toLowerCase() || "").includes(searchLower)
+            )
+        }
 
         return JSON.parse(JSON.stringify(shoots))
     } catch (error) {
