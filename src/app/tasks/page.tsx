@@ -148,7 +148,7 @@ function TaskCard({ task }: { task: any }) {
                     {task.assignee?.name}
                 </div>
                 <div className="font-medium text-slate-500">
-                    {task.deadline ? new Date(task.deadline).toLocaleDateString("tr-TR") : "Süresiz"}
+                    {task.deadline ? new Date(task.deadline).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" }) : "Süresiz"}
                 </div>
             </div>
         </Card>

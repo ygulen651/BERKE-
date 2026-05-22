@@ -198,7 +198,7 @@ export default async function FinancePage() {
                                         {transactions.map((t: any) => (
                                             <tr key={t.id} className="hover:bg-slate-50/50">
                                                 <td className="p-3 text-slate-500">
-                                                    {new Date(t.date).toLocaleDateString('tr-TR')}
+                                                    {new Date(t.date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}
                                                 </td>
                                                 <td className="p-3">
                                                     <div className="flex items-center gap-2">

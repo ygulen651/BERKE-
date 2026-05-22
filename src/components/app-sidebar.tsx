@@ -12,6 +12,7 @@ import {
     Package,
     Truck,
     Building2,
+    Receipt,
 } from "lucide-react"
 
 import {
@@ -36,6 +37,7 @@ const allMenuItems = [
     { title: "Görevler", url: "/tasks", icon: CheckSquare, adminOnly: false },
     { title: "Çekimler", url: "/shoots", icon: Camera, adminOnly: true },
     { title: "Müşteriler", url: "/customers", icon: Users, adminOnly: true },
+    { title: "Cari Hesap", url: "/cari", icon: Receipt, adminOnly: true },
     { title: "Personel", url: "/employees", icon: UserCircle, adminOnly: true },
     { title: "Stok Yönetimi", url: "/inventory", icon: Package, adminOnly: true },
     { title: "Finans", url: "/finance", icon: CreditCard, adminOnly: true },

@@ -26,14 +26,19 @@ function serializeDoc(data: Record<string, unknown>): Record<string, unknown> {
         const value = serialized[key];
         if (value instanceof Timestamp) {
             serialized[key] = value.toDate().toISOString();
-        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-            serialized[key] = serializeDoc(value as Record<string, unknown>);
-        } else if (Array.isArray(value)) {
-            serialized[key] = value.map((item: unknown) => 
-                (item && typeof item === 'object' && !Array.isArray(item)) 
-                    ? serializeDoc(item as Record<string, unknown>) 
-                    : item
-            );
+        } else if (value && typeof value === 'object') {
+            // Check if it's a Firestore FieldValue (e.g. serverTimestamp() placeholder in local cache)
+            if ('_methodName' in value || (value as any).constructor?.name?.includes('FieldValue')) {
+                serialized[key] = new Date().toISOString();
+            } else if (!Array.isArray(value)) {
+                serialized[key] = serializeDoc(value as Record<string, unknown>);
+            } else {
+                serialized[key] = value.map((item: unknown) => 
+                    (item && typeof item === 'object' && !Array.isArray(item)) 
+                        ? serializeDoc(item as Record<string, unknown>) 
+                        : item
+                );
+            }
         }
     }
     return serialized;

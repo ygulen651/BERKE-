@@ -127,7 +127,7 @@ export default async function CompanyDetailPage({
                                     companyShoots.map((shoot) => (
                                         <TableRow key={shoot.id}>
                                             <TableCell className="text-sm font-medium">
-                                                {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}
+                                                {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="font-medium">{shoot.customer?.name}</div>

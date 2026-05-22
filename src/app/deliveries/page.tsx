@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { getShoots, toggleDeliveryStatus } from "@/actions/shoot-actions"
 import { getCompanies, deleteCompany } from "@/actions/company-actions"
+import { getCustomers } from "@/actions/customer-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
@@ -50,18 +51,51 @@ export default async function DeliveriesPage({
     const query = params.query || ""
     const activeTab = params.tab || "delivery"
 
-    const allShoots = await getShoots(query)
-    const companies = await getCompanies(query)
+    const allShoots = await getShoots()
+    const allCustomers = await getCustomers()
+    const allCompanies = await getCompanies()
 
     // "Yapılmış işler" - Tarihi gelmiş veya geçmiş çekimleri veya tamamlanmışları göster
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
 
-    const completedShoots = (allShoots as any[]).filter(s => {
+    // Map customers and companies onto all shoots
+    const mappedShoots = allShoots.map((s: any) => ({
+        ...s,
+        customer: allCustomers.find((c: any) => c.id === s.customerId),
+        company: allCompanies.find((c: any) => c.id === s.companyId)
+    }))
+
+    const completedShoots = (mappedShoots as any[]).filter(s => {
         const shootDate = new Date(s.startDateTime)
         const isPastOrToday = shootDate <= today
-        return isPastOrToday || s.status === "COMPLETED" || s.deliveryStatus === "DELIVERED"
-    }).sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime())
+        return isPastOrToday || s.status === "COMPLETED" || s.status === "DELIVERED"
+    })
+
+    // Now filter by search query if present
+    let filteredCompletedShoots = completedShoots
+    if (query && activeTab === "delivery") {
+        const searchLower = query.toLowerCase()
+        filteredCompletedShoots = completedShoots.filter((s: any) => 
+            (s.customer?.name?.toLowerCase() || "").includes(searchLower) ||
+            (s.company?.name?.toLowerCase() || "").includes(searchLower) ||
+            (s.title?.toLowerCase() || "").includes(searchLower) ||
+            (s.type?.toLowerCase() || "").includes(searchLower)
+        )
+    }
+
+    filteredCompletedShoots.sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime())
+
+    let filteredCompanies = allCompanies
+    if (query && activeTab === "companies") {
+        const searchLower = query.toLowerCase()
+        filteredCompanies = allCompanies.filter((c: any) => 
+            (c.name?.toLowerCase() || "").includes(searchLower) ||
+            (c.representative?.toLowerCase() || "").includes(searchLower) ||
+            (c.phone || "").includes(searchLower) ||
+            (c.email?.toLowerCase() || "").includes(searchLower)
+        )
+    }
 
     return (
         <div className="space-y-6">
@@ -95,7 +129,7 @@ export default async function DeliveriesPage({
                             const groupedByCompany: Record<string, { company: any; shoots: any[] }> = {}
                             const individualShoots: any[] = []
 
-                            completedShoots.forEach(shoot => {
+                            filteredCompletedShoots.forEach(shoot => {
                                 if (shoot.company) {
                                     const compId = shoot.company.id.toString()
                                     if (!groupedByCompany[compId]) {
@@ -147,7 +181,7 @@ export default async function DeliveriesPage({
                                         </div>
                                     )}
 
-                                    {completedShoots.length === 0 && (
+                                    {filteredCompletedShoots.length === 0 && (
                                         <Card className="border-dashed">
                                             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                                                 <PackageSearch className="w-12 h-12 text-slate-300 mb-4" />
@@ -160,7 +194,7 @@ export default async function DeliveriesPage({
 
                             // Kart render fonksiyonu (temiz görünüm için)
                             function renderShootCard(shoot: any) {
-                                const isDelivered = shoot.deliveryStatus === "DELIVERED"
+                                const isDelivered = shoot.status === "DELIVERED"
                                 return (
                                     <Card key={shoot.id} className={`overflow-hidden transition-all ${isDelivered ? 'bg-emerald-50/10 border-emerald-100' : 'hover:border-blue-200'}`}>
                                         <CardContent className="p-0">
@@ -171,14 +205,14 @@ export default async function DeliveriesPage({
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="font-bold text-lg truncate">{shoot.customer?.name}</h3>
+                                                        <h3 className="font-bold text-lg truncate">{shoot.customer?.name || shoot.company?.name || "Müşteri"}</h3>
                                                         {isDelivered ? (
                                                             <Badge className="bg-emerald-500 text-white border-none gap-1 py-0.5">
                                                                 <CheckCircle2 className="w-3 h-3" />
                                                                 Teslim Edildi
                                                             </Badge>
                                                         ) : (
-                                                            <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 gap-1 py-0.5">
+                                                            <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50 gap-1 py-0.5 animate-pulse font-semibold">
                                                                 <Clock className="w-3 h-3" />
                                                                 Teslimat Bekliyor
                                                             </Badge>
@@ -191,7 +225,7 @@ export default async function DeliveriesPage({
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <User className="w-4 h-4" />
-                                                            {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}
+                                                            {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -202,7 +236,7 @@ export default async function DeliveriesPage({
                                                     </Link>
                                                     <form action={async () => {
                                                         "use server"
-                                                        await toggleDeliveryStatus(shoot.id, shoot.deliveryStatus)
+                                                        await toggleDeliveryStatus(shoot.id, shoot.status)
                                                     }}>
                                                         <Button
                                                             size="sm"
@@ -246,14 +280,14 @@ export default async function DeliveriesPage({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {companies.length === 0 ? (
+                                {filteredCompanies.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
                                             Henüz firma kaydı bulunmuyor.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    companies.map((company: any) => (
+                                    filteredCompanies.map((company: any) => (
                                         <TableRow key={company.id} className="hover:bg-slate-50">
                                             <TableCell>
                                                 <div className="font-bold flex items-center gap-2 text-blue-600">
@@ -270,7 +304,7 @@ export default async function DeliveriesPage({
                                                 <div className="text-xs text-muted-foreground">{company.email || "-"}</div>
                                             </TableCell>
                                             <TableCell className="text-sm">
-                                                {new Date(company.createdAt).toLocaleDateString("tr-TR")}
+                                                {new Date(company.createdAt).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">

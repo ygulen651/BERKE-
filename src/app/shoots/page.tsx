@@ -38,6 +38,72 @@ export default async function ShootsPage({
     const employees = await getEmployees()
     const inventory = await getInventory()
 
+    const tableRows = shoots.length === 0 ? (
+        <TableRow>
+            <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
+                Henüz çekim kaydı bulunmuyor. "Yeni Randevu" butonu ile başlayabilirsiniz.
+            </TableCell>
+        </TableRow>
+    ) : (
+        shoots.map((shoot: any) => {
+            const customer = customers.find((c: any) => c.id === shoot.customerId)
+            const company = companies.find((c: any) => c.id === shoot.companyId)
+            const customerName = customer?.name || company?.name || "Müşteri"
+            const staffList = shoot.staffs && shoot.staffs.length > 0 
+                ? shoot.staffs.map((st: any) => st.name).join(", ") 
+                : null
+
+            return (
+                <TableRow key={shoot.id} className="hover:bg-slate-50 cursor-pointer">
+                    <TableCell>
+                        <Link href={`/shoots/${shoot.id}`} className="block group">
+                            <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                {customerName}
+                            </div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                {shoot.title}
+                                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                        </Link>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                            {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
+                        </div>
+                        <div className="text-xs text-muted-foreground pl-5">
+                            {new Date(shoot.startDateTime).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit', timeZone: "Europe/Istanbul" })} -
+                            {new Date(shoot.endDateTime).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit', timeZone: "Europe/Istanbul" })}
+                        </div>
+                        {staffList && (
+                            <div className="text-[10px] text-blue-600 pl-5 mt-1 font-medium italic">
+                                {staffList}
+                            </div>
+                        )}
+                    </TableCell>
+                    <TableCell>
+                        <Badge variant="outline" className="font-normal">
+                            {shoot.type}
+                        </Badge>
+                    </TableCell>
+                    <TableCell>
+                        <Badge className="bg-blue-100 text-blue-700 shadow-none border-0 hover:bg-blue-200">
+                            {shoot.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
+                                <MessageCircle className="w-4 h-4" />
+                            </Button>
+                            <ShootActionsMenu shoot={shoot} customers={customers} companies={companies} employees={employees} inventory={inventory} />
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )
+        })
+    )
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -68,66 +134,7 @@ export default async function ShootsPage({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {shoots.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
-                                    Henüz çekim kaydı bulunmuyor. "Yeni Randevu" butonu ile başlayabilirsiniz.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            shoots.map((shoot: any) => (
-                                <TableRow key={shoot.id} className="hover:bg-slate-50 cursor-pointer">
-                                    <TableCell>
-                                        <Link href={`/shoots/${shoot.id}`} className="block group">
-                                            <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                                {(() => {
-                                                    const customer = customers.find((c: any) => c.id === shoot.customerId)
-                                                    const company = companies.find((c: any) => c.id === shoot.companyId)
-                                                    return customer?.name || company?.name || "Müşteri"
-                                                })()}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                                {shoot.title}
-                                                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </div>
-                                        </Link>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                                            {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground pl-5">
-                                            {new Date(shoot.startDateTime).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })} -
-                                            {new Date(shoot.endDateTime).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })}
-                                        </div>
-                                        {shoot.staffs && shoot.staffs.length > 0 && (
-                                            <div className="text-[10px] text-blue-600 pl-5 mt-1 font-medium italic">
-                                                {shoot.staffs.map((st: any) => st.name).join(", ")}
-                                            </div>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="font-normal">
-                                            {shoot.type}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className="bg-blue-100 text-blue-700 shadow-none border-0 hover:bg-blue-200">
-                                            {shoot.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
-                                                <MessageCircle className="w-4 h-4" />
-                                            </Button>
-                                            <ShootActionsMenu shoot={shoot} customers={customers} companies={companies} employees={employees} inventory={inventory} />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
+                        {tableRows}
                     </TableBody>
                 </Table>
             </div>

@@ -93,7 +93,8 @@ export default async function ShootDetailsPage({ params }: { params: Promise<{ i
                                                 day: 'numeric',
                                                 month: 'long',
                                                 year: 'numeric',
-                                                weekday: 'long'
+                                                weekday: 'long',
+                                                timeZone: 'Europe/Istanbul'
                                             })}
                                         </p>
                                     </div>
@@ -105,8 +106,8 @@ export default async function ShootDetailsPage({ params }: { params: Promise<{ i
                                     <div>
                                         <p className="text-xs font-medium text-muted-foreground uppercase">Saat Aralığı</p>
                                         <p className="font-semibold text-slate-900">
-                                            {new Date(shoot.startDateTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} -
-                                            {new Date(shoot.endDateTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                            {new Date(shoot.startDateTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })} -
+                                            {new Date(shoot.endDateTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })}
                                         </p>
                                     </div>
                                 </div>

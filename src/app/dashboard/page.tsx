@@ -29,8 +29,32 @@ export default async function DashboardPage() {
     const companies = await getCompanies()
     const { totalIncome } = isAdmin ? await getFinanceStats() : { totalIncome: 0 }
 
-    const today = new Date().toISOString().split('T')[0]
-    const todayShoots = (shoots as any[]).filter(s => new Date(s.startDateTime).toISOString().startsWith(today))
+    // Bugünün tarihini Türkiye saat dilimine (Europe/Istanbul) göre alalım:
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" })
+    
+    // Bugünün çekimlerini filtreleyelim:
+    const todayShoots = (shoots as any[]).filter(s => {
+        try {
+            const shootDateStr = new Date(s.startDateTime).toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" })
+            return shootDateStr === today
+        } catch (e) {
+            return false
+        }
+    })
+
+    // Yaklaşan/Bekleyen çekimleri filtreleyip en yakından en uzağa (artan düzende) sıralayalım:
+    const upcomingShoots = (shoots as any[])
+        .filter(s => {
+            try {
+                const shootDateStr = new Date(s.startDateTime).toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" })
+                // Bugün ve gelecekteki, tamamlanmamış çekimler
+                return shootDateStr >= today && s.status !== "COMPLETED"
+            } catch (e) {
+                return false
+            }
+        })
+        .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime())
+
     const pendingTasks = (tasks as any[]).filter(t => t.status !== "COMPLETED")
 
     const stats = [
@@ -104,17 +128,26 @@ export default async function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {shoots.length === 0 ? (
-                                <p className="text-center py-8 text-muted-foreground text-sm">Henüz çekim kaydı yok.</p>
+                            {upcomingShoots.length === 0 ? (
+                                <p className="text-center py-8 text-muted-foreground text-sm">Yaklaşan bekleyen çekim bulunmuyor.</p>
                             ) : (
-                                (shoots as any[]).slice(0, 5).map((shoot: any) => {
+                                upcomingShoots.slice(0, 5).map((shoot: any) => {
                                     const totalPrice = parseFloat(shoot.totalPrice || 0)
                                     const deposit = parseFloat(shoot.deposit || 0)
                                     const remaining = totalPrice - deposit
+                                    const isToday = new Date(shoot.startDateTime).toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" }) === today
 
                                     return (
-                                        <div key={shoot.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
-                                            <div className="bg-primary/10 p-2 rounded text-primary flex-shrink-0">
+                                        <div key={shoot.id} className={`flex items-center gap-4 p-3 border rounded-lg transition-all ${
+                                            isToday 
+                                                ? "border-red-500 bg-red-50/50 animate-pulse text-red-950 shadow-md shadow-red-100/50" 
+                                                : "hover:bg-slate-50 border-slate-200"
+                                        }`}>
+                                            <div className={`p-2 rounded flex-shrink-0 ${
+                                                isToday 
+                                                    ? "bg-red-200 text-red-700" 
+                                                    : "bg-primary/10 text-primary"
+                                            }`}>
                                                 <CalendarIcon className="w-4 h-4" />
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -126,7 +159,7 @@ export default async function DashboardPage() {
                                                     })()}
                                                 </h4>
                                                 <p className="text-xs text-muted-foreground truncate">
-                                                    {shoot.title} - {new Date(shoot.startDateTime).toLocaleDateString("tr-TR")}
+                                                    {shoot.title} - {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
                                                 </p>
                                                 <div className="mt-1 flex gap-2">
                                                     {totalPrice > 0 ? (
