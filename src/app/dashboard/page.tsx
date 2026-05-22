@@ -161,23 +161,25 @@ export default async function DashboardPage() {
                                                 <p className="text-xs text-muted-foreground truncate">
                                                     {shoot.title} - {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
                                                 </p>
-                                                <div className="mt-1 flex gap-2">
-                                                    {totalPrice > 0 ? (
-                                                        remaining > 0 ? (
-                                                            <Badge variant="outline" className="text-[10px] h-5 bg-red-50 text-red-600 border-red-100 font-bold">
-                                                                Kalan: ₺{remaining.toLocaleString("tr-TR")}
-                                                            </Badge>
+                                                {isAdmin && (
+                                                    <div className="mt-1 flex gap-2">
+                                                        {totalPrice > 0 ? (
+                                                            remaining > 0 ? (
+                                                                <Badge variant="outline" className="text-[10px] h-5 bg-red-50 text-red-600 border-red-100 font-bold">
+                                                                    Kalan: ₺{remaining.toLocaleString("tr-TR")}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-600 border-emerald-100 font-bold">
+                                                                    Ödendi
+                                                                </Badge>
+                                                            )
                                                         ) : (
-                                                            <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-600 border-emerald-100 font-bold">
-                                                                Ödendi
+                                                            <Badge variant="outline" className="text-[10px] h-5 bg-slate-50 text-slate-500 border-slate-100 italic">
+                                                                Fiyat Girilmemiş
                                                             </Badge>
-                                                        )
-                                                    ) : (
-                                                        <Badge variant="outline" className="text-[10px] h-5 bg-slate-50 text-slate-500 border-slate-100 italic">
-                                                            Fiyat Girilmemiş
-                                                        </Badge>
-                                                    )}
-                                                </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                             {isAdmin && (
                                                 <Link href={`/shoots/${shoot.id}`} className="ml-auto flex-shrink-0">
