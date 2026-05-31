@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -42,6 +42,11 @@ interface AddTaskDialogProps {
 export function AddTaskDialog({ employees }: AddTaskDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -73,6 +78,15 @@ export function AddTaskDialog({ employees }: AddTaskDialogProps) {
         } else {
             alert("Hata: " + result.error)
         }
+    }
+
+    if (!isMounted) {
+        return (
+            <Button className="gap-2">
+                <ListPlus className="w-4 h-4" />
+                Yeni Görev Ata
+            </Button>
+        )
     }
 
     return (

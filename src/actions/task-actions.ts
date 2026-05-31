@@ -17,6 +17,7 @@ import {
 export async function createTask(formData: any) {
     try {
         const taskData = {
+            status: "TODO",
             ...formData,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),

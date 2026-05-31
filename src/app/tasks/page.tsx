@@ -23,6 +23,10 @@ export default async function TasksPage() {
     const tasks = await getTasks()
     const employees = await getEmployees()
 
+    const todoTasks = (tasks as any[]).filter(t => t.status === "TODO" || !t.status);
+    const inProgressTasks = (tasks as any[]).filter(t => t.status === "IN_PROGRESS");
+    const completedTasks = (tasks as any[]).filter(t => t.status === "COMPLETED");
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -43,11 +47,11 @@ export default async function TasksPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {(tasks as any[]).filter(t => t.status === "TODO").length === 0 ? (
+                        {todoTasks.length === 0 ? (
                             <p className="text-center text-xs text-muted-foreground py-8">Görev yok</p>
                         ) : (
-                            (tasks as any[]).filter(t => t.status === "TODO").map((task: any) => (
-                                <TaskCard key={task.id} task={task} />
+                            todoTasks.map((task: any) => (
+                                <TaskCard key={task.id} task={task} employees={employees} />
                             ))
                         )}
                     </CardContent>
@@ -62,11 +66,11 @@ export default async function TasksPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {(tasks as any[]).filter(t => t.status === "IN_PROGRESS").length === 0 ? (
+                        {inProgressTasks.length === 0 ? (
                             <p className="text-center text-xs text-muted-foreground py-8">Görev yok</p>
                         ) : (
-                            (tasks as any[]).filter(t => t.status === "IN_PROGRESS").map((task: any) => (
-                                <TaskCard key={task.id} task={task} />
+                            inProgressTasks.map((task: any) => (
+                                <TaskCard key={task.id} task={task} employees={employees} />
                             ))
                         )}
                     </CardContent>
@@ -81,11 +85,11 @@ export default async function TasksPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {(tasks as any[]).filter(t => t.status === "COMPLETED").length === 0 ? (
+                        {completedTasks.length === 0 ? (
                             <p className="text-center text-xs text-muted-foreground py-8">Görev yok</p>
                         ) : (
-                            (tasks as any[]).filter(t => t.status === "COMPLETED").map((task: any) => (
-                                <TaskCard key={task.id} task={task} />
+                            completedTasks.map((task: any) => (
+                                <TaskCard key={task.id} task={task} employees={employees} />
                             ))
                         )}
                     </CardContent>
@@ -95,7 +99,8 @@ export default async function TasksPage() {
     )
 }
 
-function TaskCard({ task }: { task: any }) {
+function TaskCard({ task, employees }: { task: any, employees: any[] }) {
+    const employee = employees?.find(e => e.id === task.assignedTo);
     const priorityColors: Record<string, string> = {
         URGENT: "text-red-700 bg-red-200",
         HIGH: "text-red-600 bg-red-100",
@@ -145,9 +150,9 @@ function TaskCard({ task }: { task: any }) {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                     <UserCircle className="w-3.5 h-3.5" />
-                    {task.assignee?.name}
+                    {employee?.name || task.assignee?.name || "Atanmadı"}
                 </div>
-                <div className="font-medium text-slate-500">
+                <div suppressHydrationWarning className="font-medium text-slate-500">
                     {task.deadline ? new Date(task.deadline).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" }) : "Süresiz"}
                 </div>
             </div>

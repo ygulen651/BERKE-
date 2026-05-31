@@ -23,10 +23,21 @@ import { Badge } from "@/components/ui/badge"
 export default async function FinancePage() {
     const transactions = await getTransactions()
     const employees = await getEmployees()
-    const shoots = await getShoots()
+    const rawShoots = await getShoots()
     const customers = await getCustomers()
     const companies = await getCompanies()
     const inventory = await getInventory()
+
+    // Çekimlere müşteri isimlerini ekle ki dropdown'larda ve ekranda isim gözüksün
+    const shoots = rawShoots.map((shoot: any) => {
+        const customer = customers.find((c: any) => c.id === shoot.customerId)
+        const company = companies.find((c: any) => c.id === shoot.companyId)
+        return {
+            ...shoot,
+            customer: { name: customer?.name || company?.name || "Bilinmiyor" }
+        }
+    })
+
     const {
         totalIncome,
         totalExpense,

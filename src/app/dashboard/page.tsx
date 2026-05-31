@@ -13,6 +13,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { getShoots } from "@/actions/shoot-actions"
 import { getTasks } from "@/actions/task-actions"
+import { getEmployees } from "@/actions/employee-actions"
 import { getCustomers } from "@/actions/customer-actions"
 import { getCompanies } from "@/actions/company-actions"
 import { getFinanceStats } from "@/actions/finance-actions"
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
 
     const shoots = await getShoots()
     const tasks = await getTasks()
+    const employees = await getEmployees()
     const customers = await getCustomers()
     const companies = await getCompanies()
     const { totalIncome } = isAdmin ? await getFinanceStats() : { totalIncome: 0 }
@@ -203,15 +205,18 @@ export default async function DashboardPage() {
                             {tasks.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground text-sm">Görev bulunmuyor.</p>
                             ) : (
-                                (tasks as any[]).slice(0, 5).map((task: any) => (
-                                    <div key={task.id} className="flex items-start gap-3 text-sm">
-                                        <div className={`mt-1.5 w-2 h-2 rounded-full ${task.status === "COMPLETED" ? "bg-green-500" : "bg-amber-500"}`} />
-                                        <div>
-                                            <p className="font-medium">{task.title}</p>
-                                            <p className="text-xs text-muted-foreground">Atanan: {task.assignee?.name}</p>
+                                (tasks as any[]).slice(0, 5).map((task: any) => {
+                                    const employee = employees.find((e: any) => e.id === task.assignedTo)
+                                    return (
+                                        <div key={task.id} className="flex items-start gap-3 text-sm">
+                                            <div className={`mt-1.5 w-2 h-2 rounded-full ${task.status === "COMPLETED" ? "bg-green-500" : "bg-amber-500"}`} />
+                                            <div>
+                                                <p className="font-medium">{task.title}</p>
+                                                <p className="text-xs text-muted-foreground">Atanan: {employee?.name || task.assignee?.name || "Atanmadı"}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    )
+                                })
                             )}
                         </div>
                     </CardContent>
