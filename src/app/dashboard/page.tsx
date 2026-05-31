@@ -7,7 +7,8 @@ import {
     PlusCircle,
     UserPlus,
     Send,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    AlertCircle
 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -58,6 +59,20 @@ export default async function DashboardPage() {
         .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime())
 
     const pendingTasks = (tasks as any[]).filter(t => t.status !== "COMPLETED")
+
+    const overdueShoots = (shoots as any[])
+        .filter(s => {
+            try {
+                const shootDateStr = new Date(s.startDateTime).toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" })
+                const totalPrice = parseFloat(s.totalPrice || 0)
+                const deposit = parseFloat(s.deposit || 0)
+                const remaining = totalPrice - deposit
+                return shootDateStr < today && remaining > 0
+            } catch (e) {
+                return false
+            }
+        })
+        .sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime())
 
     const stats = [
         { title: "Bugünkü Çekimler", value: todayShoots.length.toString(), icon: Camera, color: "text-blue-600", bg: "bg-blue-100" },
@@ -222,6 +237,58 @@ export default async function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {isAdmin && (
+                <div className="grid gap-4 md:grid-cols-1">
+                    <Card className="border-red-200 bg-red-50/20">
+                        <CardHeader>
+                            <CardTitle className="text-red-800 flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5" />
+                                Ödemesi Geciken / Bekleyen Tahsilatlar
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {overdueShoots.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm col-span-full">Geciken ödeme bulunmuyor.</p>
+                                ) : (
+                                    overdueShoots.map((shoot: any) => {
+                                        const totalPrice = parseFloat(shoot.totalPrice || 0)
+                                        const deposit = parseFloat(shoot.deposit || 0)
+                                        const remaining = totalPrice - deposit
+                                        const customer = customers.find((c: any) => c.id === shoot.customerId)
+                                        const company = companies.find((c: any) => c.id === shoot.companyId)
+                                        const name = customer?.name || company?.name || "Müşteri"
+
+                                        return (
+                                            <div key={shoot.id} className="bg-white p-4 rounded-lg border border-red-100 shadow-sm flex flex-col gap-2 transition-shadow hover:shadow-md">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="min-w-0 flex-1 pr-2">
+                                                        <h4 className="font-bold text-sm text-slate-800 truncate">{name}</h4>
+                                                        <p className="text-xs text-muted-foreground truncate">{shoot.title}</p>
+                                                    </div>
+                                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold whitespace-nowrap">
+                                                        Kalan: ₺{remaining.toLocaleString("tr-TR")}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                                                        <CalendarIcon className="w-3 h-3" />
+                                                        {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
+                                                    </span>
+                                                    <Link href={`/shoots/${shoot.id}`}>
+                                                        <Button variant="ghost" size="sm" className="h-7 text-xs">Detay</Button>
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     )
 }
