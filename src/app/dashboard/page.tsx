@@ -8,7 +8,8 @@ import {
     UserPlus,
     Send,
     Calendar as CalendarIcon,
-    AlertCircle
+    AlertCircle,
+    CheckCircle2
 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -73,6 +74,20 @@ export default async function DashboardPage() {
             }
         })
         .sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime())
+
+    const paidShoots = (shoots as any[])
+        .filter(s => {
+            try {
+                const totalPrice = parseFloat(s.totalPrice || 0)
+                const deposit = parseFloat(s.deposit || 0)
+                const remaining = totalPrice - deposit
+                return totalPrice > 0 && remaining <= 0
+            } catch (e) {
+                return false
+            }
+        })
+        .sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime())
+        .slice(0, 15) // Limit to latest 15 to avoid heavy DOM
 
     const stats = [
         { title: "Bugünkü Çekimler", value: todayShoots.length.toString(), icon: Camera, color: "text-blue-600", bg: "bg-blue-100" },
@@ -239,7 +254,7 @@ export default async function DashboardPage() {
             </div>
 
             {isAdmin && (
-                <div className="grid gap-4 md:grid-cols-1">
+                <div className="grid gap-4 md:grid-cols-2">
                     <Card className="border-red-200 bg-red-50/20">
                         <CardHeader>
                             <CardTitle className="text-red-800 flex items-center gap-2">
@@ -248,9 +263,9 @@ export default async function DashboardPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <div className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-red-200">
                                 {overdueShoots.length === 0 ? (
-                                    <p className="text-muted-foreground text-sm col-span-full">Geciken ödeme bulunmuyor.</p>
+                                    <p className="text-muted-foreground text-sm">Geciken ödeme bulunmuyor.</p>
                                 ) : (
                                     overdueShoots.map((shoot: any) => {
                                         const totalPrice = parseFloat(shoot.totalPrice || 0)
@@ -269,6 +284,51 @@ export default async function DashboardPage() {
                                                     </div>
                                                     <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold whitespace-nowrap">
                                                         Kalan: ₺{remaining.toLocaleString("tr-TR")}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                                                        <CalendarIcon className="w-3 h-3" />
+                                                        {new Date(shoot.startDateTime).toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })}
+                                                    </span>
+                                                    <Link href={`/shoots/${shoot.id}`}>
+                                                        <Button variant="ghost" size="sm" className="h-7 text-xs">Detay</Button>
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-emerald-200 bg-emerald-50/20">
+                        <CardHeader>
+                            <CardTitle className="text-emerald-800 flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5" />
+                                Son Ödenen (Tamamlanan) Çekimler
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col gap-3 max-h-[450px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-200">
+                                {paidShoots.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm">Ödenen çekim bulunmuyor.</p>
+                                ) : (
+                                    paidShoots.map((shoot: any) => {
+                                        const customer = customers.find((c: any) => c.id === shoot.customerId)
+                                        const company = companies.find((c: any) => c.id === shoot.companyId)
+                                        const name = customer?.name || company?.name || "Müşteri"
+
+                                        return (
+                                            <div key={shoot.id} className="bg-white p-4 rounded-lg border border-emerald-100 shadow-sm flex flex-col gap-2 transition-shadow hover:shadow-md">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="min-w-0 flex-1 pr-2">
+                                                        <h4 className="font-bold text-sm text-slate-800 truncate">{name}</h4>
+                                                        <p className="text-xs text-muted-foreground truncate">{shoot.title}</p>
+                                                    </div>
+                                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold whitespace-nowrap">
+                                                        Ödendi
                                                     </Badge>
                                                 </div>
                                                 <div className="flex items-center justify-between mt-2">
